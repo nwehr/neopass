@@ -52,7 +52,17 @@ func (s Store) DecryptPassword(entry Entry, keyring openpgp.EntityList) {
 	}
 
 	fmt.Print("passphrase: ")
-	passphrase, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+
+	tty, err := os.Open("/dev/tty")
+	if err != nil {
+		log.Fatal("could not open /dev/tty ", err)
+	}
+	defer tty.Close()
+
+	passphrase, err := terminal.ReadPassword(int(tty.Fd()))
+	if err != nil {
+		log.Fatal("terminal.ReadPassword(int(os.Stdin.Fd())) ", err)
+	}
 
 	entity.PrivateKey.Decrypt(passphrase)
 	for _, subkey := range entity.Subkeys {

@@ -42,14 +42,14 @@ func (h Home) ReadStore() Store {
 		log.Fatal("os.Open(storePath)", err)
 	}
 
+	defer storeFile.Close()
+
 	store := Store{}
 
 	err = json.NewDecoder(storeFile).Decode(&store)
 	if err != nil {
 		log.Fatal("json.NewDecoder(storeFile).Decode(&store)", err)
 	}
-
-	storeFile.Close()
 
 	return store
 }
@@ -66,10 +66,13 @@ func (h Home) WriteStore(store Store) {
 
 	defer storeFile.Close()
 
+	encoded, err := json.MarshalIndent(store, "", "    ")
+	if err != nil {
+		log.Fatal(`json.MarshalIndent(store, "", "    ") `, err)
+	}
+
 	storeFile.Truncate(0)
 	storeFile.Seek(0, 0)
-
-	encoded, err := json.MarshalIndent(store, "", "    ")
 
 	if _, err = storeFile.Write(encoded); err != nil {
 		log.Fatal(err)
