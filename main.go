@@ -4,14 +4,17 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strings"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func main() {
 	info, err := os.Stdin.Stat()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	if info.Mode()&os.ModeCharDevice == 0 {
@@ -69,7 +72,22 @@ func main() {
 		keyring, _ := home.PublicKeyring()
 		store := home.ReadStore()
 
-		store.Add(os.Args[2], os.Args[3], keyring)
+		fmt.Print("password: ")
+
+		tty, err := os.Open("/dev/tty")
+		if err != nil {
+			log.Fatal("could not open /dev/tty ", err)
+		}
+		defer tty.Close()
+
+		password, err := terminal.ReadPassword(int(tty.Fd()))
+		if err != nil {
+			log.Fatal("terminal.ReadPassword(int(os.Stdin.Fd())) ", err)
+		}
+
+		fmt.Println()
+
+		store.Add(os.Args[2], string(password), keyring)
 		home.WriteStore(store)
 	case "rm":
 		store := home.ReadStore()
