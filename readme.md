@@ -8,6 +8,12 @@ MacBook-Pro:~ $ paws | fzf | paws
 
 All passwords are encrypted/decrypted using your gpg key and are stored in `~/.paws/store.json`. Passwords are never displayed on the console and therefore should never leaked into your command history or a log file.
 
+## Install
+
+```
+MacBook-Pro:~ $ go get -u github.com/nwehr/pawss
+```
+
 ## Usage
 
 Initializing the store (you must already have a gpg key):
