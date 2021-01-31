@@ -1,6 +1,6 @@
 ## Paws
 
-`paws` is inspired by [pass](https://www.passwordstore.org) but is a little simpler and designed to work with pipes. For example, you can fuzzy search your passwords on the console by using `fzf`.
+`paws` is a password manager inspired by [pass](https://www.passwordstore.org) but is a little simpler and designed to work with pipes. For example, you can fuzzy search your passwords on the console by using `fzf`.
 
 ```
 MacBook-Pro:~ $ paws | fzf | paws
