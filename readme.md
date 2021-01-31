@@ -11,7 +11,7 @@ All passwords are encrypted/decrypted using your gpg key and are stored in `~/.p
 ## Install
 
 ```
-MacBook-Pro:~ $ go get -u github.com/nwehr/pawss
+MacBook-Pro:~ $ go get -u github.com/nwehr/paws
 ```
 
 ## Usage
