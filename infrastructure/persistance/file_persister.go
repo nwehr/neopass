@@ -5,15 +5,15 @@ import (
 	"os"
 	"os/user"
 
-	"github.com/nwehr/paws/core"
+	"github.com/nwehr/paws/core/domain"
 )
 
 type FilePersister struct {
 	Path string
 }
 
-func (r FilePersister) Load() (core.Store, error) {
-	store := core.Store{}
+func (r FilePersister) Load() (domain.Store, error) {
+	store := domain.Store{}
 
 	file, err := os.Open(r.Path)
 	if err != nil {
@@ -26,7 +26,7 @@ func (r FilePersister) Load() (core.Store, error) {
 	return store, err
 }
 
-func (r FilePersister) Save(store core.Store) error {
+func (r FilePersister) Save(store domain.Store) error {
 	file, err := os.OpenFile(r.Path, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return err

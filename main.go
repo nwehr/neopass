@@ -8,11 +8,11 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/nwehr/paws/application/commands"
-	"github.com/nwehr/paws/application/queries"
-	"github.com/nwehr/paws/core"
-	"github.com/nwehr/paws/encryption/pgp"
-	"github.com/nwehr/paws/persistance"
+	"github.com/nwehr/paws/core/application/commands"
+	"github.com/nwehr/paws/core/application/queries"
+	"github.com/nwehr/paws/core/domain"
+	"github.com/nwehr/paws/infrastructure/encryption/pgp"
+	"github.com/nwehr/paws/infrastructure/persistance"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -74,7 +74,7 @@ func main() {
 
 		_, err := p.Load()
 		if err != nil {
-			p.Save(core.Store{})
+			p.Save(domain.Store{})
 		}
 	case "add":
 		enc, err := pgp.DefaultEncrypter()

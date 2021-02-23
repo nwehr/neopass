@@ -1,11 +1,11 @@
 package queries
 
-import "github.com/nwehr/paws/core"
+import "github.com/nwehr/paws/core/domain"
 
 type AllEntryNames struct {
 }
 
-func (q AllEntryNames) Execute(p core.StorePersister) ([]string, error) {
+func (q AllEntryNames) Execute(p domain.StorePersister) ([]string, error) {
 	store, err := p.Load()
 	if err != nil {
 		return nil, err

@@ -1,4 +1,4 @@
-package core
+package domain
 
 type Entry struct {
 	Name     string `json:"name"`

@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"github.com/nwehr/paws/core"
-	"github.com/nwehr/paws/encryption"
+	"github.com/nwehr/paws/core/domain"
+	"github.com/nwehr/paws/infrastructure/encryption"
 )
 
 type UpdateEntry struct {
@@ -10,7 +10,7 @@ type UpdateEntry struct {
 	Password string `json:"password"`
 }
 
-func (c UpdateEntry) Execute(e encryption.Encrypter, p core.StorePersister) error {
+func (c UpdateEntry) Execute(e encryption.Encrypter, p domain.StorePersister) error {
 	store, err := p.Load()
 	if err != nil {
 		return err
@@ -21,7 +21,7 @@ func (c UpdateEntry) Execute(e encryption.Encrypter, p core.StorePersister) erro
 		return err
 	}
 
-	if err := store.Entries.Update(core.Entry{c.Name, encryptedPassword}); err != nil {
+	if err := store.Entries.Update(domain.Entry{c.Name, encryptedPassword}); err != nil {
 		return err
 	}
 

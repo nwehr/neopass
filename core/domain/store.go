@@ -1,4 +1,4 @@
-package core
+package domain
 
 // Store represents all the password entries for a particular identity
 type Store struct {

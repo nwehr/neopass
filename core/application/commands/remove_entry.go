@@ -1,14 +1,12 @@
 package commands
 
-import (
-	"github.com/nwehr/paws/core"
-)
+import "github.com/nwehr/paws/core/domain"
 
 type RemoveEntry struct {
 	Name string
 }
 
-func (c RemoveEntry) Execute(p core.StorePersister) error {
+func (c RemoveEntry) Execute(p domain.StorePersister) error {
 	store, err := p.Load()
 	if err != nil {
 		return err
