@@ -36,6 +36,17 @@ func (e Entries) Find(name string) (Entry, error) {
 	return Entry{}, NotFoundError{name}
 }
 
+func (e *Entries) Remove(name string) error {
+	for i, current := range *e {
+		if current.Name == name {
+			*e = append((*e)[:i], (*e)[i+1:]...)
+			return nil
+		}
+	}
+
+	return NotFoundError{name}
+}
+
 type AlreadyExistsError struct {
 	Name string
 }

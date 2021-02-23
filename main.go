@@ -52,11 +52,6 @@ func main() {
 
 	switch os.Args[1] {
 	case "add":
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
 		name := os.Args[2]
 		password, _ := getPassword()
 
@@ -65,12 +60,14 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-	default:
+	case "rm":
+		name := os.Args[2]
+		err = commands.RemoveEntry{name}.Execute(p)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-
+	default:
 		name := os.Args[1]
 		password, err := queries.GetEntryPassword{Name: name}.Execute(dec, p)
 		if err != nil {

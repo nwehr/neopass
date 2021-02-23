@@ -61,3 +61,38 @@ func TestUpdateEntry(t *testing.T) {
 	}
 
 }
+
+func TestRemoveEntry(t *testing.T) {
+	s := Store{Identity: "nathan"}
+
+	s.Entries.Add(Entry{
+		Name:     "github.com",
+		Password: "secret",
+	})
+
+	s.Entries.Add(Entry{
+		Name:     "gitlab.com",
+		Password: "secret",
+	})
+
+	s.Entries.Add(Entry{
+		Name:     "bitbucket.com",
+		Password: "secret",
+	})
+
+	if len(s.Entries) != 3 {
+		t.Errorf("Expected 3 entires, got %d", len(s.Entries))
+	}
+
+	if err := s.Entries.Remove("bitbucket.com"); err != nil {
+		t.Errorf("Unexpected error: %s", err.Error())
+	}
+
+	if len(s.Entries) != 2 {
+		t.Errorf("Expected 2 entires, got %d", len(s.Entries))
+	}
+
+	if _, err := s.Entries.Find("bitbucket.com"); err == nil {
+		t.Errorf("Expected to have NotFoundError; got nil")
+	}
+}
