@@ -18,11 +18,11 @@ type PGPDecrypter struct {
 }
 
 func (d PGPDecrypter) Decrypt(text string) (string, error) {
-	entityByNameOrEmail := func(nameOrEmail string) (*openpgp.Entity, error) {
-		for _, entity := range d.SecretKeyring {
-			for _, identity := range entity.Identities {
+	keyByNameOrEmail := func(nameOrEmail string) (*openpgp.Entity, error) {
+		for _, key := range d.SecretKeyring {
+			for _, identity := range key.Identities {
 				if nameOrEmail == identity.UserId.Name || nameOrEmail == identity.UserId.Email {
-					return entity, nil
+					return key, nil
 				}
 			}
 		}
@@ -30,7 +30,7 @@ func (d PGPDecrypter) Decrypt(text string) (string, error) {
 		return nil, fmt.Errorf("entity %s does not exist", nameOrEmail)
 	}
 
-	entity, err := entityByNameOrEmail(d.Identity)
+	key, err := keyByNameOrEmail(d.Identity)
 	if err != nil {
 		return "", err
 	}
@@ -40,8 +40,8 @@ func (d PGPDecrypter) Decrypt(text string) (string, error) {
 		return "", err
 	}
 
-	entity.PrivateKey.Decrypt(passphrase)
-	for _, subkey := range entity.Subkeys {
+	key.PrivateKey.Decrypt(passphrase)
+	for _, subkey := range key.Subkeys {
 		subkey.PrivateKey.Decrypt(passphrase)
 	}
 
@@ -71,6 +71,9 @@ func DefaultDecrypter() (PGPDecrypter, error) {
 	}
 
 	keyring, err := openpgp.ReadKeyRing(keyringFile)
+	if err != nil {
+		return PGPDecrypter{}, err
+	}
 
 	return PGPDecrypter{
 		Identity:      config.Identity,
