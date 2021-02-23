@@ -10,8 +10,8 @@ type UpdateEntry struct {
 	Password string `json:"password"`
 }
 
-func (c UpdateEntry) Execute(e encryption.IEncrypter, r core.IStoreRepository) error {
-	store, err := r.Load()
+func (c UpdateEntry) Execute(e encryption.Encrypter, p core.StorePersister) error {
+	store, err := p.Load()
 	if err != nil {
 		return err
 	}
@@ -25,5 +25,5 @@ func (c UpdateEntry) Execute(e encryption.IEncrypter, r core.IStoreRepository) e
 		return err
 	}
 
-	return r.Save(store)
+	return p.Save(store)
 }

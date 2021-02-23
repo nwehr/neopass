@@ -10,8 +10,8 @@ type AddEntry struct {
 	Password string `json:"password"`
 }
 
-func (c AddEntry) Execute(e encryption.IEncrypter, r core.IStoreRepository) error {
-	store, err := r.Load()
+func (c AddEntry) Execute(e encryption.Encrypter, p core.StorePersister) error {
+	store, err := p.Load()
 	if err != nil {
 		return err
 	}
@@ -25,5 +25,5 @@ func (c AddEntry) Execute(e encryption.IEncrypter, r core.IStoreRepository) erro
 		return err
 	}
 
-	return r.Save(store)
+	return p.Save(store)
 }

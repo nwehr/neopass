@@ -1,4 +1,4 @@
-package file
+package persistance
 
 import (
 	"encoding/json"
@@ -8,11 +8,11 @@ import (
 	"github.com/nwehr/paws/core"
 )
 
-type FileStoreRepository struct {
+type FilePersister struct {
 	Path string
 }
 
-func (r FileStoreRepository) Load() (core.Store, error) {
+func (r FilePersister) Load() (core.Store, error) {
 	store := core.Store{}
 
 	file, err := os.Open(r.Path)
@@ -26,7 +26,7 @@ func (r FileStoreRepository) Load() (core.Store, error) {
 	return store, err
 }
 
-func (r FileStoreRepository) Save(store core.Store) error {
+func (r FilePersister) Save(store core.Store) error {
 	file, err := os.OpenFile(r.Path, os.O_RDWR, 0)
 	if err != nil {
 		return err
@@ -43,9 +43,9 @@ func (r FileStoreRepository) Save(store core.Store) error {
 	return err
 }
 
-func DefaultStoreRepository() FileStoreRepository {
+func DefaultFilePersister() FilePersister {
 	usr, _ := user.Current()
 	path := usr.HomeDir + "/.paws/store.json"
 
-	return FileStoreRepository{Path: path}
+	return FilePersister{Path: path}
 }

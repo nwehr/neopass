@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/user"
 
@@ -49,7 +48,7 @@ func (d PGPDecrypter) Decrypt(text string) (string, error) {
 
 	password, err := base64.StdEncoding.DecodeString(text)
 	if err != nil {
-		log.Fatal("base64.StdEncoding.DecodeString(entry.Password) ", err)
+		return "", err
 	}
 
 	md, err := openpgp.ReadMessage(bytes.NewBuffer(password), d.SecretKeyring, nil, nil)
@@ -83,6 +82,7 @@ func DefaultDecrypter(identity string) (PGPDecrypter, error) {
 			}
 
 			defer tty.Close()
+			defer fmt.Println()
 
 			return terminal.ReadPassword(int(tty.Fd()))
 		},

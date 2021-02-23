@@ -1,5 +1,5 @@
 package encryption
 
-type IEncrypter interface {
+type Encrypter interface {
 	Encrypt(string) (string, error)
 }

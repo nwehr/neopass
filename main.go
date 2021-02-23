@@ -2,71 +2,77 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/nwehr/paws/application/commands"
 	"github.com/nwehr/paws/application/queries"
 	"github.com/nwehr/paws/encryption/pgp"
-	"github.com/nwehr/paws/persistance/file"
+	"github.com/nwehr/paws/persistance"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-func getPassword() ([]byte, error) {
-	tty, err := os.Open("/dev/tty")
-	if err != nil {
-		return nil, err
-	}
-
-	defer tty.Close()
-
-	return terminal.ReadPassword(int(tty.Fd()))
-}
-
 func main() {
-	r := file.DefaultStoreRepository()
+	p := persistance.DefaultFilePersister()
 
 	if len(os.Args) == 1 {
-		entries, err := queries.ListEntries{}.Execute(r)
+		names, err := queries.AllEntryNames{}.Execute(p)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
+			return
 		}
 
-		for _, entryName := range entries {
-			fmt.Println(entryName)
+		for _, name := range names {
+			fmt.Println(name)
 		}
 		return
 	}
 
 	switch os.Args[1] {
 	case "add":
-		store, _ := r.Load()
+		store, _ := p.Load()
 		enc, err := pgp.DefaultEncrypter(store.Identity)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
+			return
 		}
 
 		name := os.Args[2]
 		password, _ := getPassword()
 
-		err = commands.AddEntry{Name: name, Password: string(password)}.Execute(enc, r)
+		err = commands.AddEntry{Name: name, Password: string(password)}.Execute(enc, p)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
+			return
 		}
 	default:
-		store, _ := r.Load()
+		store, _ := p.Load()
 		d, err := pgp.DefaultDecrypter(store.Identity)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
+			return
 		}
 
 		name := os.Args[1]
-		password, err := queries.GetEntry{Name: name}.Execute(d, r)
+		password, err := queries.GetEntryPassword{Name: name}.Execute(d, p)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
+			return
 		}
 
-		fmt.Println()
 		fmt.Println(password)
 	}
+}
+
+func getPassword() ([]byte, error) {
+	fmt.Print("password: ")
+
+	tty, err := os.Open("/dev/tty")
+	if err != nil {
+		return nil, err
+	}
+
+	defer tty.Close()
+	defer fmt.Println()
+
+	return terminal.ReadPassword(int(tty.Fd()))
 }

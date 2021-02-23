@@ -2,11 +2,11 @@ package queries
 
 import "github.com/nwehr/paws/core"
 
-type ListEntries struct {
+type AllEntryNames struct {
 }
 
-func (q ListEntries) Execute(r core.IStoreRepository) ([]string, error) {
-	store, err := r.Load()
+func (q AllEntryNames) Execute(p core.StorePersister) ([]string, error) {
+	store, err := p.Load()
 	if err != nil {
 		return nil, err
 	}

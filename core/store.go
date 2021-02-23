@@ -6,7 +6,7 @@ type Store struct {
 	Entries  Entries `json:"entries"`
 }
 
-type IStoreRepository interface {
+type StorePersister interface {
 	Load() (Store, error)
 	Save(Store) error
 }

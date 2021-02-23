@@ -26,6 +26,16 @@ func (e *Entries) Update(entry Entry) error {
 	return NotFoundError{entry.Name}
 }
 
+func (e Entries) Find(name string) (Entry, error) {
+	for _, current := range e {
+		if current.Name == name {
+			return current, nil
+		}
+	}
+
+	return Entry{}, NotFoundError{name}
+}
+
 type AlreadyExistsError struct {
 	Name string
 }

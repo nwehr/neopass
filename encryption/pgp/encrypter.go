@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"log"
 	"os"
 	"os/user"
 
@@ -37,12 +36,12 @@ func (e PGPEncrypter) Encrypt(password string) (string, error) {
 	ciphertext := new(bytes.Buffer)
 	plaintext, err := openpgp.Encrypt(ciphertext, openpgp.EntityList{entity}, nil, nil, nil)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	_, err = plaintext.Write([]byte(password))
 	if err != nil {
-		log.Fatal("plaintext.Write([]byte(password)) ", err)
+		return "", err
 	}
 
 	plaintext.Close()
