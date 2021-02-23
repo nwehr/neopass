@@ -27,7 +27,7 @@ func (r FilePersister) Load() (core.Store, error) {
 }
 
 func (r FilePersister) Save(store core.Store) error {
-	file, err := os.OpenFile(r.Path, os.O_RDWR, 0)
+	file, err := os.OpenFile(r.Path, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return err
 	}

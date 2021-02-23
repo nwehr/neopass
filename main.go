@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	"strings"
 
 	"github.com/nwehr/paws/application/commands"
 	"github.com/nwehr/paws/application/queries"
+	"github.com/nwehr/paws/core"
 	"github.com/nwehr/paws/encryption/pgp"
 	"github.com/nwehr/paws/persistance"
 
@@ -17,12 +19,15 @@ import (
 
 func main() {
 	p := persistance.DefaultFilePersister()
-	store, _ := p.Load()
-	enc, err := pgp.DefaultEncrypter(store.Identity)
-	dec, err := pgp.DefaultDecrypter(store.Identity)
 
 	if weAreInAPipe() {
-		name, err := readNameFromPipe()
+		dec, err := pgp.DefaultDecrypter()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		name, err := nameFromPipe()
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -51,25 +56,57 @@ func main() {
 	}
 
 	switch os.Args[1] {
-	case "add":
-		name := os.Args[2]
-		password, _ := getPassword()
+	case "init":
+		identity := os.Args[2]
 
-		err = commands.AddEntry{Name: name, Password: string(password)}.Execute(enc, p)
+		usr, _ := user.Current()
+
+		config := pgp.Config{
+			Identity:          identity,
+			PublicKeyringPath: usr.HomeDir + "/.gnupg/pubring.gpg",
+			SecretKeyringPath: usr.HomeDir + "/.gnupg/secring.gpg",
+		}
+
+		if err := pgp.SaveConfig(config); err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		_, err := p.Load()
+		if err != nil {
+			p.Save(core.Store{})
+		}
+	case "add":
+		enc, err := pgp.DefaultEncrypter()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		name := os.Args[2]
+		password, _ := ttyPassword()
+
+		err = commands.AddEntry{name, string(password)}.Execute(enc, p)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 	case "rm":
 		name := os.Args[2]
-		err = commands.RemoveEntry{name}.Execute(p)
+		err := commands.RemoveEntry{name}.Execute(p)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 	default:
+		dec, err := pgp.DefaultDecrypter()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
 		name := os.Args[1]
-		password, err := queries.GetEntryPassword{Name: name}.Execute(dec, p)
+		password, err := queries.GetEntryPassword{name}.Execute(dec, p)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -79,7 +116,7 @@ func main() {
 	}
 }
 
-func getPassword() ([]byte, error) {
+func ttyPassword() ([]byte, error) {
 	fmt.Print("password: ")
 
 	tty, err := os.Open("/dev/tty")
@@ -106,7 +143,7 @@ func weAreInAPipe() bool {
 	return false
 }
 
-func readNameFromPipe() (string, error) {
+func nameFromPipe() (string, error) {
 	r := bufio.NewReader(os.Stdin)
 
 	var output []rune

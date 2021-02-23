@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/user"
 
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/ssh/terminal"
@@ -60,10 +59,13 @@ func (d PGPDecrypter) Decrypt(text string) (string, error) {
 	return string(contents), err
 }
 
-func DefaultDecrypter(identity string) (PGPDecrypter, error) {
-	usr, _ := user.Current()
+func DefaultDecrypter() (PGPDecrypter, error) {
+	config, err := DefaultConfig()
+	if err != nil {
+		return PGPDecrypter{}, err
+	}
 
-	keyringFile, err := os.Open(usr.HomeDir + "/.gnupg/secring.gpg")
+	keyringFile, err := os.Open(config.SecretKeyringPath)
 	if err != nil {
 		return PGPDecrypter{}, err
 	}
@@ -71,7 +73,7 @@ func DefaultDecrypter(identity string) (PGPDecrypter, error) {
 	keyring, err := openpgp.ReadKeyRing(keyringFile)
 
 	return PGPDecrypter{
-		Identity:      identity,
+		Identity:      config.Identity,
 		SecretKeyring: keyring,
 		GetPassphrase: func() ([]byte, error) {
 			fmt.Print("passphrase: ")

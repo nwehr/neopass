@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
-	"os/user"
 
 	"golang.org/x/crypto/openpgp"
 )
@@ -49,14 +48,17 @@ func (e PGPEncrypter) Encrypt(password string) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext.Bytes()), nil
 }
 
-func DefaultEncrypter(identity string) (PGPEncrypter, error) {
-	usr, _ := user.Current()
+func DefaultEncrypter() (PGPEncrypter, error) {
+	config, err := DefaultConfig()
+	if err != nil {
+		return PGPEncrypter{}, err
+	}
 
-	keyringFile, err := os.Open(usr.HomeDir + "/.gnupg/pubring.gpg")
+	keyringFile, err := os.Open(config.PublicKeyringPath)
 	if err != nil {
 		return PGPEncrypter{}, err
 	}
 
 	keyring, err := openpgp.ReadKeyRing(keyringFile)
-	return PGPEncrypter{Identity: identity, PublicKeyring: keyring}, err
+	return PGPEncrypter{Identity: config.Identity, PublicKeyring: keyring}, err
 }

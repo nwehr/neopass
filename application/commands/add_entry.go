@@ -6,17 +6,17 @@ import (
 )
 
 type AddEntry struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
+	Name     string
+	Password string
 }
 
-func (c AddEntry) Execute(e encryption.Encrypter, p core.StorePersister) error {
+func (c AddEntry) Execute(enc encryption.Encrypter, p core.StorePersister) error {
 	store, err := p.Load()
 	if err != nil {
 		return err
 	}
 
-	encryptedPassword, err := e.Encrypt(c.Password)
+	encryptedPassword, err := enc.Encrypt(c.Password)
 	if err != nil {
 		return err
 	}
