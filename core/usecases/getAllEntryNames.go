@@ -1,12 +1,13 @@
-package queries
+package usecases
 
 import "github.com/nwehr/paws/core/domain"
 
-type AllEntryNames struct {
+type GetAllEntryNames struct {
+	Persister domain.StorePersister
 }
 
-func (q AllEntryNames) Execute(p domain.StorePersister) ([]string, error) {
-	store, err := p.Load()
+func (u GetAllEntryNames) Run() ([]string, error) {
+	store, err := u.Persister.Load()
 	if err != nil {
 		return nil, err
 	}

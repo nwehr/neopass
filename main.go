@@ -8,9 +8,8 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/nwehr/paws/core/application/commands"
-	"github.com/nwehr/paws/core/application/queries"
 	"github.com/nwehr/paws/core/domain"
+	"github.com/nwehr/paws/core/usecases"
 	"github.com/nwehr/paws/infrastructure/encryption/pgp"
 	"github.com/nwehr/paws/infrastructure/persistance"
 
@@ -32,7 +31,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		password, err := queries.GetEntryPassword{Name: name}.Execute(dec, p)
+		password, err := usecases.GetDecryptedPassword{p, dec}.Run(name)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -43,7 +42,7 @@ func main() {
 	}
 
 	if len(os.Args) == 1 {
-		names, err := queries.AllEntryNames{}.Execute(p)
+		names, err := usecases.GetAllEntryNames{p}.Run()
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -86,14 +85,14 @@ func main() {
 		name := os.Args[2]
 		password, _ := ttyPassword()
 
-		err = commands.AddEntry{name, string(password)}.Execute(enc, p)
+		err = usecases.AddEntry{enc, p}.Run(name, string(password))
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 	case "rm":
 		name := os.Args[2]
-		err := commands.RemoveEntry{name}.Execute(p)
+		err := usecases.RemoveEntry{p}.Run(name)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -106,7 +105,7 @@ func main() {
 		}
 
 		name := os.Args[1]
-		password, err := queries.GetEntryPassword{name}.Execute(dec, p)
+		password, err := usecases.GetDecryptedPassword{p, dec}.Run(name)
 		if err != nil {
 			fmt.Println(err)
 			return

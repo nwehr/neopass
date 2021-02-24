@@ -1,13 +1,14 @@
-package commands
+package usecases
 
 import "testing"
 
 func TestRemoveEntry(t *testing.T) {
-	p := DefaultInMemoryPersistor()
+	p := DefaultMockPersistor()
 
-	AddEntry{"github.com", "abc123"}.Execute(NonEncryptor{}, p)
-	AddEntry{"gitlab.com", "abc123"}.Execute(NonEncryptor{}, p)
-	AddEntry{"bitbucket.com", "abc123"}.Execute(NonEncryptor{}, p)
+	u := AddEntry{MockEncrypter{}, p}
+	u.Run("github.com", "abc123")
+	u.Run("gitlab.com", "abc123")
+	u.Run("bitbucket.com", "abc123")
 
 	store, _ := p.Load()
 
@@ -15,7 +16,7 @@ func TestRemoveEntry(t *testing.T) {
 		t.Errorf("Expected 3 entries; got %d", len(store.Entries))
 	}
 
-	RemoveEntry{"gitlab.com"}.Execute(p)
+	RemoveEntry{p}.Run("gitlab.com")
 
 	store, _ = p.Load()
 
