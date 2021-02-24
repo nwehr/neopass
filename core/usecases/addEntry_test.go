@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/nwehr/paws/core/domain"
+	"github.com/nwehr/paws/infrastructure/encryption"
 )
 
 func TestAddEntry(t *testing.T) {
 	p := DefaultMockPersistor()
 
-	u := AddEntry{MockEncrypter{}, p}
+	u := AddEntry{p, encryption.NoEncrypter{}}
 	u.Run("github.com", "abc123")
 	u.Run("gitlab.com", "abc123")
 	u.Run("bitbucket.com", "abc123")
@@ -40,16 +41,4 @@ func (p *MockPersister) Save(store domain.Store) (err error) {
 
 func DefaultMockPersistor() *MockPersister {
 	return &MockPersister{[]byte("{\"identity\":\"\", \"entries\": null}")}
-}
-
-type MockEncrypter struct{}
-
-func (MockEncrypter) Encrypt(password string) (string, error) {
-	return password, nil
-}
-
-type MockDecrypter struct{}
-
-func (MockDecrypter) Decrypt(password string) (string, error) {
-	return password, nil
 }

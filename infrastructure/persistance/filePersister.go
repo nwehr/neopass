@@ -47,5 +47,5 @@ func DefaultFilePersister() FilePersister {
 	usr, _ := user.Current()
 	path := usr.HomeDir + "/.paws/store.json"
 
-	return FilePersister{Path: path}
+	return FilePersister{path}
 }

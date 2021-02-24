@@ -48,12 +48,7 @@ func (e PGPEncrypter) Encrypt(password string) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext.Bytes()), nil
 }
 
-func DefaultEncrypter() (PGPEncrypter, error) {
-	config, err := DefaultConfig()
-	if err != nil {
-		return PGPEncrypter{}, err
-	}
-
+func DefaultEncrypter(config Config) (PGPEncrypter, error) {
 	keyringFile, err := os.Open(config.PublicKeyringPath)
 	if err != nil {
 		return PGPEncrypter{}, err

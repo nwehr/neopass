@@ -10,8 +10,11 @@ import (
 
 	"github.com/nwehr/paws/core/domain"
 	"github.com/nwehr/paws/core/usecases"
+	"github.com/nwehr/paws/infrastructure/config"
+	"github.com/nwehr/paws/infrastructure/encryption"
 	"github.com/nwehr/paws/infrastructure/encryption/pgp"
 	"github.com/nwehr/paws/infrastructure/persistance"
+	"github.com/nwehr/paws/interface/api"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -20,7 +23,13 @@ func main() {
 	p := persistance.DefaultFilePersister()
 
 	if weAreInAPipe() {
-		dec, err := pgp.DefaultDecrypter()
+		conf, err := config.LoadPgpConfig()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		dec, err := pgp.DefaultDecrypter(conf)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -54,19 +63,25 @@ func main() {
 		return
 	}
 
+	pgpConfig, err := config.LoadPgpConfig()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	switch os.Args[1] {
 	case "init":
 		identity := os.Args[2]
 
 		usr, _ := user.Current()
 
-		config := pgp.Config{
+		conf := pgp.Config{
 			Identity:          identity,
 			PublicKeyringPath: usr.HomeDir + "/.gnupg/pubring.gpg",
 			SecretKeyringPath: usr.HomeDir + "/.gnupg/secring.gpg",
 		}
 
-		if err := pgp.SaveConfig(config); err != nil {
+		if err := config.SavePgpConfig(conf); err != nil {
 			fmt.Println(err)
 			return
 		}
@@ -76,7 +91,7 @@ func main() {
 			p.Save(domain.Store{})
 		}
 	case "add":
-		enc, err := pgp.DefaultEncrypter()
+		enc, err := pgp.DefaultEncrypter(pgpConfig)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -85,7 +100,7 @@ func main() {
 		name := os.Args[2]
 		password, _ := ttyPassword()
 
-		err = usecases.AddEntry{enc, p}.Run(name, string(password))
+		err = usecases.AddEntry{p, enc}.Run(name, string(password))
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -97,8 +112,17 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+	case "start-server":
+		apiConfig, err := config.LoadApiConfig()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Println(api.Api{apiConfig, encryption.NoEncrypter{}, encryption.NoDecrypter{}}.Start())
+		return
 	default:
-		dec, err := pgp.DefaultDecrypter()
+		dec, err := pgp.DefaultDecrypter(pgpConfig)
 		if err != nil {
 			fmt.Println(err)
 			return

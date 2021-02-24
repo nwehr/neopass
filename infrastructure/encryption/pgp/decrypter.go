@@ -59,12 +59,7 @@ func (d PGPDecrypter) Decrypt(text string) (string, error) {
 	return string(contents), err
 }
 
-func DefaultDecrypter() (PGPDecrypter, error) {
-	config, err := DefaultConfig()
-	if err != nil {
-		return PGPDecrypter{}, err
-	}
-
+func DefaultDecrypter(config Config) (PGPDecrypter, error) {
 	keyringFile, err := os.Open(config.SecretKeyringPath)
 	if err != nil {
 		return PGPDecrypter{}, err

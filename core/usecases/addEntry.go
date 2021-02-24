@@ -6,8 +6,8 @@ import (
 )
 
 type AddEntry struct {
-	Encrypter encryption.Encrypter
 	Persister domain.StorePersister
+	Encrypter encryption.Encrypter
 }
 
 func (u AddEntry) Run(name string, password string) error {
