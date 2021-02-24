@@ -18,15 +18,7 @@ import (
 )
 
 func main() {
-<<<<<<< HEAD
-	info, err := os.Stdin.Stat()
-	if err != nil {
-		fmt.Println("os.Stdin.Stat() ", err)
-		os.Exit(1)
-	}
-=======
 	p := persistance.DefaultFilePersister()
->>>>>>> 46d42a5959d90587e4e4750c858231be2cbbf36c
 
 	if weAreInAPipe() {
 		dec, err := pgp.DefaultDecrypter()
@@ -69,16 +61,10 @@ func main() {
 
 		usr, _ := user.Current()
 
-<<<<<<< HEAD
-		tty, err := os.Open("/dev/tty")
-		if err != nil {
-			panic(fmt.Sprintf("could not open /dev/tty %s", err))
-=======
 		config := pgp.Config{
 			Identity:          identity,
 			PublicKeyringPath: usr.HomeDir + "/.gnupg/pubring.gpg",
 			SecretKeyringPath: usr.HomeDir + "/.gnupg/secring.gpg",
->>>>>>> 46d42a5959d90587e4e4750c858231be2cbbf36c
 		}
 
 		if err := pgp.SaveConfig(config); err != nil {
@@ -88,9 +74,6 @@ func main() {
 
 		_, err := p.Load()
 		if err != nil {
-<<<<<<< HEAD
-			panic(fmt.Sprintf("terminal.ReadPassword(int(os.Stdin.Fd())) %s", err))
-=======
 			p.Save(domain.Store{})
 		}
 	case "add":
@@ -98,7 +81,6 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 			return
->>>>>>> 46d42a5959d90587e4e4750c858231be2cbbf36c
 		}
 
 		name := os.Args[2]
