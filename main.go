@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 
@@ -14,7 +13,8 @@ import (
 func main() {
 	info, err := os.Stdin.Stat()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("os.Stdin.Stat() ", err)
+		os.Exit(1)
 	}
 
 	if info.Mode()&os.ModeCharDevice == 0 {
@@ -76,13 +76,13 @@ func main() {
 
 		tty, err := os.Open("/dev/tty")
 		if err != nil {
-			log.Fatal("could not open /dev/tty ", err)
+			panic(fmt.Sprintf("could not open /dev/tty %s", err))
 		}
 		defer tty.Close()
 
 		password, err := terminal.ReadPassword(int(tty.Fd()))
 		if err != nil {
-			log.Fatal("terminal.ReadPassword(int(os.Stdin.Fd())) ", err)
+			panic(fmt.Sprintf("terminal.ReadPassword(int(os.Stdin.Fd())) %s", err))
 		}
 
 		fmt.Println()

@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 
 	"github.com/atotto/clipboard"
@@ -21,18 +20,18 @@ type Store struct {
 func (s *Store) Add(name string, password string, keyring openpgp.EntityList) {
 	entity, err := entityByNameOrEmail(s.Identity, keyring)
 	if err != nil {
-		log.Fatal("entityByNameOrEmail(store.Identity, kring) ", err)
+		panic(fmt.Sprintf("entityByNameOrEmail(store.Identity, kring) %s", err))
 	}
 
 	ciphertext := new(bytes.Buffer)
 	plaintext, err := openpgp.Encrypt(ciphertext, openpgp.EntityList{entity}, nil, nil, nil)
 	if err != nil {
-		log.Fatal(err)
+		panic(fmt.Sprintf("openpgp.Encrypt(ciphertext, openpgp.EntityList{entity}, nil, nil, nil) %s", err))
 	}
 
 	_, err = plaintext.Write([]byte(password))
 	if err != nil {
-		log.Fatal("plaintext.Write([]byte(password)) ", err)
+		panic(fmt.Sprintf("plaintext.Write([]byte(password)) %s", err))
 	}
 
 	plaintext.Close()
@@ -48,20 +47,20 @@ func (s *Store) Add(name string, password string, keyring openpgp.EntityList) {
 func (s Store) DecryptPassword(entry Entry, keyring openpgp.EntityList) {
 	entity, err := entityByNameOrEmail(s.Identity, keyring)
 	if err != nil {
-		log.Fatal(`entityByNameOrEmail(store.Identity, kring) `, err)
+		panic(fmt.Sprintf(`entityByNameOrEmail(store.Identity, kring) %s`, err))
 	}
 
 	fmt.Print("passphrase: ")
 
 	tty, err := os.Open("/dev/tty")
 	if err != nil {
-		log.Fatal("could not open /dev/tty ", err)
+		panic(fmt.Sprintf("could not open /dev/tty %s", err))
 	}
 	defer tty.Close()
 
 	passphrase, err := terminal.ReadPassword(int(tty.Fd()))
 	if err != nil {
-		log.Fatal("terminal.ReadPassword(int(os.Stdin.Fd())) ", err)
+		panic(fmt.Sprintf("terminal.ReadPassword(int(os.Stdin.Fd())) %s", err))
 	}
 
 	entity.PrivateKey.Decrypt(passphrase)
@@ -71,21 +70,21 @@ func (s Store) DecryptPassword(entry Entry, keyring openpgp.EntityList) {
 
 	password, err := base64.StdEncoding.DecodeString(entry.Password)
 	if err != nil {
-		log.Fatal("base64.StdEncoding.DecodeString(entry.Password) ", err)
+		panic(fmt.Sprintf("base64.StdEncoding.DecodeString(entry.Password) %s", err))
 	}
 
 	md, err := openpgp.ReadMessage(bytes.NewBuffer(password), keyring, nil, nil)
 	if err != nil {
-		log.Fatal("openpgp.ReadMessage(bytes.NewReader(password), kring, prompt, nil) ", err)
+		panic(fmt.Sprintf("openpgp.ReadMessage(bytes.NewReader(password), kring, prompt, nil) %s", err))
 	}
 
 	contents, err := ioutil.ReadAll(md.UnverifiedBody)
 	if err != nil {
-		log.Fatal("ioutil.ReadAll(md.UnverifiedBody) ", err)
+		panic(fmt.Sprintf("ioutil.ReadAll(md.UnverifiedBody) %s", err))
 	}
 
 	if err = clipboard.WriteAll(string(contents)); err != nil {
-		log.Fatal("clipboard.WriteAll(string(contents)) ", err)
+		panic(fmt.Sprintf("clipboard.WriteAll(string(contents)) %s", err))
 	}
 
 	fmt.Printf("\ncopied to clipboard\n")

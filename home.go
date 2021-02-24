@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"os"
 	"os/user"
 
@@ -21,7 +21,7 @@ func NewHome() Home {
 func (h Home) PublicKeyring() (openpgp.EntityList, error) {
 	keyringFile, err := os.Open(h.HomeDir + "/.gnupg/pubring.gpg")
 	if err != nil {
-		log.Fatal("os.Open(keyringPath): ", err)
+		panic(fmt.Sprintf("os.Open(keyringPath): %s", err))
 	}
 
 	return openpgp.ReadKeyRing(keyringFile)
@@ -30,7 +30,7 @@ func (h Home) PublicKeyring() (openpgp.EntityList, error) {
 func (h Home) SecretKeyring() (openpgp.EntityList, error) {
 	keyringFile, err := os.Open(h.HomeDir + "/.gnupg/secring.gpg")
 	if err != nil {
-		log.Fatal("os.Open(keyringPath): ", err)
+		panic(fmt.Sprintf("os.Open(keyringPath): %s", err))
 	}
 
 	return openpgp.ReadKeyRing(keyringFile)
@@ -39,7 +39,7 @@ func (h Home) SecretKeyring() (openpgp.EntityList, error) {
 func (h Home) ReadStore() Store {
 	storeFile, err := os.Open(h.HomeDir + "/.paws/store.json")
 	if err != nil {
-		log.Fatal("os.Open(storePath)", err)
+		panic(fmt.Sprintf("os.Open(storePath) %s", err))
 	}
 
 	defer storeFile.Close()
@@ -48,7 +48,7 @@ func (h Home) ReadStore() Store {
 
 	err = json.NewDecoder(storeFile).Decode(&store)
 	if err != nil {
-		log.Fatal("json.NewDecoder(storeFile).Decode(&store)", err)
+		panic(fmt.Sprintf("json.NewDecoder(storeFile).Decode(&store) %s", err))
 	}
 
 	return store
@@ -61,20 +61,20 @@ func (h Home) WriteStore(store Store) {
 
 	storeFile, err := os.OpenFile(h.HomeDir+"/.paws/store.json", os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
-		log.Fatal("os.Open(storePath)", err)
+		panic(fmt.Sprintf("os.Open(storePath) %s", err))
 	}
 
 	defer storeFile.Close()
 
 	encoded, err := json.MarshalIndent(store, "", "    ")
 	if err != nil {
-		log.Fatal(`json.MarshalIndent(store, "", "    ") `, err)
+		panic(fmt.Sprintf(`json.MarshalIndent(store, "", "    ") %s`, err))
 	}
 
 	storeFile.Truncate(0)
 	storeFile.Seek(0, 0)
 
 	if _, err = storeFile.Write(encoded); err != nil {
-		log.Fatal(err)
+		panic(fmt.Sprintf("storeFile.Write(encoded) %s", err))
 	}
 }
