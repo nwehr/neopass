@@ -5,108 +5,184 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	"strings"
+
+	"github.com/nwehr/paws/core/application/commands"
+	"github.com/nwehr/paws/core/application/queries"
+	"github.com/nwehr/paws/core/domain"
+	"github.com/nwehr/paws/infrastructure/encryption/pgp"
+	"github.com/nwehr/paws/infrastructure/persistance"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
 
 func main() {
+<<<<<<< HEAD
 	info, err := os.Stdin.Stat()
 	if err != nil {
 		fmt.Println("os.Stdin.Stat() ", err)
 		os.Exit(1)
 	}
+=======
+	p := persistance.DefaultFilePersister()
+>>>>>>> 46d42a5959d90587e4e4750c858231be2cbbf36c
 
-	if info.Mode()&os.ModeCharDevice == 0 {
-		r := bufio.NewReader(os.Stdin)
-
-		var output []rune
-
-		for {
-			input, _, err := r.ReadRune()
-			if err != nil && err == io.EOF {
-				r.ReadRune()
-				break
-			}
-			output = append(output, input)
-		}
-
-		runesToString := func(runes []rune) (outString string) {
-			for _, v := range runes {
-				outString += string(v)
-			}
+	if weAreInAPipe() {
+		dec, err := pgp.DefaultDecrypter()
+		if err != nil {
+			fmt.Println(err)
 			return
 		}
 
-		name := strings.TrimSpace(runesToString(output))
-
-		home := NewHome()
-
-		keyring, _ := home.SecretKeyring()
-		store := home.ReadStore()
-
-		for _, entry := range store.Entries {
-			if name == entry.Name {
-				store.DecryptPassword(entry, keyring)
-			}
+		name, err := nameFromPipe()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		password, err := queries.GetEntryPassword{Name: name}.Execute(dec, p)
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
 
+		fmt.Println(password)
 		return
 	}
 
-	home := NewHome()
-
 	if len(os.Args) == 1 {
-		for _, entry := range home.ReadStore().Entries {
-			fmt.Println(entry.Name)
+		names, err := queries.AllEntryNames{}.Execute(p)
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
 
+		for _, name := range names {
+			fmt.Println(name)
+		}
 		return
 	}
 
 	switch os.Args[1] {
 	case "init":
-		store := Store{Identity: os.Args[2]}
-		home.WriteStore(store)
-	case "add":
-		keyring, _ := home.PublicKeyring()
-		store := home.ReadStore()
+		identity := os.Args[2]
 
-		fmt.Print("password: ")
+		usr, _ := user.Current()
 
+<<<<<<< HEAD
 		tty, err := os.Open("/dev/tty")
 		if err != nil {
 			panic(fmt.Sprintf("could not open /dev/tty %s", err))
+=======
+		config := pgp.Config{
+			Identity:          identity,
+			PublicKeyringPath: usr.HomeDir + "/.gnupg/pubring.gpg",
+			SecretKeyringPath: usr.HomeDir + "/.gnupg/secring.gpg",
+>>>>>>> 46d42a5959d90587e4e4750c858231be2cbbf36c
 		}
-		defer tty.Close()
 
-		password, err := terminal.ReadPassword(int(tty.Fd()))
+		if err := pgp.SaveConfig(config); err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		_, err := p.Load()
 		if err != nil {
+<<<<<<< HEAD
 			panic(fmt.Sprintf("terminal.ReadPassword(int(os.Stdin.Fd())) %s", err))
+=======
+			p.Save(domain.Store{})
+		}
+	case "add":
+		enc, err := pgp.DefaultEncrypter()
+		if err != nil {
+			fmt.Println(err)
+			return
+>>>>>>> 46d42a5959d90587e4e4750c858231be2cbbf36c
 		}
 
-		fmt.Println()
+		name := os.Args[2]
+		password, _ := ttyPassword()
 
-		store.Add(os.Args[2], string(password), keyring)
-		home.WriteStore(store)
+		err = commands.AddEntry{name, string(password)}.Execute(enc, p)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 	case "rm":
-		store := home.ReadStore()
-
-		for i, entry := range store.Entries {
-			if os.Args[2] == entry.Name {
-				store.Entries = append(store.Entries[:i], store.Entries[i+1:]...)
-			}
+		name := os.Args[2]
+		err := commands.RemoveEntry{name}.Execute(p)
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
-
-		home.WriteStore(store)
 	default:
-		keyring, _ := home.SecretKeyring()
-		store := home.ReadStore()
-
-		for _, entry := range store.Entries {
-			if os.Args[1] == entry.Name {
-				store.DecryptPassword(entry, keyring)
-			}
+		dec, err := pgp.DefaultDecrypter()
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
+
+		name := os.Args[1]
+		password, err := queries.GetEntryPassword{name}.Execute(dec, p)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Println(password)
 	}
+}
+
+func ttyPassword() ([]byte, error) {
+	fmt.Print("password: ")
+
+	tty, err := os.Open("/dev/tty")
+	if err != nil {
+		return nil, err
+	}
+
+	defer tty.Close()
+	defer fmt.Println()
+
+	return terminal.ReadPassword(int(tty.Fd()))
+}
+
+func weAreInAPipe() bool {
+	info, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+
+	if info.Mode()&os.ModeCharDevice == 0 {
+		return true
+	}
+
+	return false
+}
+
+func nameFromPipe() (string, error) {
+	r := bufio.NewReader(os.Stdin)
+
+	var output []rune
+
+	for {
+		input, _, err := r.ReadRune()
+		if err != nil && err == io.EOF {
+			r.ReadRune()
+			break
+		}
+		output = append(output, input)
+	}
+
+	runesToString := func(runes []rune) (outString string) {
+		for _, v := range runes {
+			outString += string(v)
+		}
+		return
+	}
+
+	name := strings.TrimSpace(runesToString(output))
+	return name, nil
+
 }
