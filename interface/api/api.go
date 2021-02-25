@@ -38,6 +38,8 @@ func (iface Api) Start() error {
 func RequireAuthorization(authToken string) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Println(r.Method, r.URL.Path)
+
 			bearerToken := r.Header.Get("Authorization")
 			if bearerToken == "" {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
