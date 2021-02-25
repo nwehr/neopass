@@ -8,7 +8,6 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/nwehr/paws/core/domain"
 	"github.com/nwehr/paws/core/usecases"
 	"github.com/nwehr/paws/infrastructure/config"
 	"github.com/nwehr/paws/infrastructure/encryption"
@@ -20,7 +19,7 @@ import (
 )
 
 func main() {
-	p := persistance.DefaultFilePersister()
+	repo := persistance.DefaultFileRepository()
 
 	if weAreInAPipe() {
 		conf, err := config.LoadPgpConfig()
@@ -40,7 +39,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		password, err := usecases.GetDecryptedPassword{p, dec}.Run(name)
+		password, err := usecases.GetDecryptedPassword{repo, dec}.Run(name)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -51,7 +50,7 @@ func main() {
 	}
 
 	if len(os.Args) == 1 {
-		names, err := usecases.GetAllEntryNames{p}.Run()
+		names, err := usecases.GetAllEntryNames{repo}.Run()
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -86,10 +85,10 @@ func main() {
 			return
 		}
 
-		_, err := p.Load()
-		if err != nil {
-			p.Save(domain.Store{})
-		}
+		// _, err := p.Load()
+		// if err != nil {
+		// 	p.Save(domain.Store{})
+		// }
 	case "add":
 		enc, err := pgp.DefaultEncrypter(pgpConfig)
 		if err != nil {
@@ -100,14 +99,14 @@ func main() {
 		name := os.Args[2]
 		password, _ := ttyPassword()
 
-		err = usecases.AddEntry{p, enc}.Run(name, string(password))
+		err = usecases.AddEntry{repo, enc}.Run(name, string(password))
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 	case "rm":
 		name := os.Args[2]
-		err := usecases.RemoveEntry{p}.Run(name)
+		err := usecases.RemoveEntry{repo}.Run(name)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -129,7 +128,7 @@ func main() {
 		}
 
 		name := os.Args[1]
-		password, err := usecases.GetDecryptedPassword{p, dec}.Run(name)
+		password, err := usecases.GetDecryptedPassword{repo, dec}.Run(name)
 		if err != nil {
 			fmt.Println(err)
 			return

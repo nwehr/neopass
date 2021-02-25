@@ -6,12 +6,17 @@ import (
 )
 
 type UpdateEntry struct {
-	Persister domain.StorePersister
-	Encrypter encryption.Encrypter
+	Repository domain.StoreRepository
+	Encrypter  encryption.Encrypter
 }
 
 func (u UpdateEntry) Run(name, password string) error {
-	store, err := u.Persister.Load()
+	_, err := u.Repository.GetEntry(name)
+	if err != nil {
+		return err
+	}
+
+	err = u.Repository.RemoveEntry(name)
 	if err != nil {
 		return err
 	}
@@ -21,9 +26,5 @@ func (u UpdateEntry) Run(name, password string) error {
 		return err
 	}
 
-	if err := store.Entries.Update(domain.Entry{name, encryptedPassword}); err != nil {
-		return err
-	}
-
-	return u.Persister.Save(store)
+	return u.Repository.AddEntry(domain.Entry{name, encryptedPassword})
 }

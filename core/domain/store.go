@@ -10,3 +10,10 @@ type StorePersister interface {
 	Load() (Store, error)
 	Save(Store) error
 }
+
+type StoreRepository interface {
+	AddEntry(Entry) error
+	RemoveEntry(string) error
+	GetEntry(string) (Entry, error)
+	GetEntryNames() ([]string, error)
+}

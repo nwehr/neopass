@@ -6,17 +6,12 @@ import (
 )
 
 type GetDecryptedPassword struct {
-	Persister domain.StorePersister
-	Decrypter encryption.Decrypter
+	Repository domain.StoreRepository
+	Decrypter  encryption.Decrypter
 }
 
 func (u GetDecryptedPassword) Run(name string) (string, error) {
-	store, err := u.Persister.Load()
-	if err != nil {
-		return "", err
-	}
-
-	entry, err := store.Entries.Find(name)
+	entry, err := u.Repository.GetEntry(name)
 	if err != nil {
 		return "", err
 	}

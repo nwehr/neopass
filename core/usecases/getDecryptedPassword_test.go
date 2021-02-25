@@ -7,14 +7,14 @@ import (
 )
 
 func TestGetDecryptedPassword(t *testing.T) {
-	p := DefaultMockPersistor()
+	r := DefaultMockRepository()
 
-	u := AddEntry{p, encryption.NoEncrypter{}}
+	u := AddEntry{r, encryption.NoEncrypter{}}
 	u.Run("github.com", "secret1")
 	u.Run("gitlab.com", "secret2")
 	u.Run("bitbucket.com", "secret3")
 
-	password, err := GetDecryptedPassword{p, encryption.NoDecrypter{}}.Run("gitlab.com")
+	password, err := GetDecryptedPassword{r, encryption.NoDecrypter{}}.Run("gitlab.com")
 	if err != nil {
 		t.Error(err)
 	}

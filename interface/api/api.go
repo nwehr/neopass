@@ -56,9 +56,9 @@ func RequireAuthorization(authToken string) mux.MiddlewareFunc {
 }
 
 func GetAllEntriesHandler(w http.ResponseWriter, r *http.Request) {
-	p := persistance.DefaultFilePersister()
+	repo := persistance.DefaultFileRepository()
 
-	names, err := usecases.GetAllEntryNames{p}.Run()
+	names, err := usecases.GetAllEntryNames{repo}.Run()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -69,10 +69,10 @@ func GetAllEntriesHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetPasswordHandler(dec encryption.Decrypter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		p := persistance.DefaultFilePersister()
+		repo := persistance.DefaultFileRepository()
 
 		name := mux.Vars(r)["name"]
-		password, err := usecases.GetDecryptedPassword{p, dec}.Run(name)
+		password, err := usecases.GetDecryptedPassword{repo, dec}.Run(name)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -85,7 +85,7 @@ func GetPasswordHandler(dec encryption.Decrypter) http.HandlerFunc {
 
 func AddEntryHandler(enc encryption.Encrypter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		p := persistance.DefaultFilePersister()
+		repo := persistance.DefaultFileRepository()
 
 		name := mux.Vars(r)["name"]
 		password, err := ioutil.ReadAll(r.Body)
@@ -93,7 +93,7 @@ func AddEntryHandler(enc encryption.Encrypter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		if err = (usecases.AddEntry{p, enc}.Run(name, string(password))); err != nil {
+		if err = (usecases.AddEntry{repo, enc}.Run(name, string(password))); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -101,7 +101,7 @@ func AddEntryHandler(enc encryption.Encrypter) http.HandlerFunc {
 
 func UpdateEntryHandler(enc encryption.Encrypter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		p := persistance.DefaultFilePersister()
+		repo := persistance.DefaultFileRepository()
 
 		name := mux.Vars(r)["name"]
 		password, err := ioutil.ReadAll(r.Body)
@@ -109,17 +109,17 @@ func UpdateEntryHandler(enc encryption.Encrypter) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		if err = (usecases.UpdateEntry{p, enc}.Run(name, string(password))); err != nil {
+		if err = (usecases.UpdateEntry{repo, enc}.Run(name, string(password))); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
 }
 
 func RemoveEntryHandler(w http.ResponseWriter, r *http.Request) {
-	p := persistance.DefaultFilePersister()
+	repo := persistance.DefaultFileRepository()
 
 	name := mux.Vars(r)["name"]
-	if err := (usecases.RemoveEntry{p}.Run(name)); err != nil {
+	if err := (usecases.RemoveEntry{repo}.Run(name)); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

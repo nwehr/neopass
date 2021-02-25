@@ -7,24 +7,24 @@ import (
 )
 
 func TestRemoveEntry(t *testing.T) {
-	p := DefaultMockPersistor()
+	r := DefaultMockRepository()
 
-	u := AddEntry{p, encryption.NoEncrypter{}}
+	u := AddEntry{r, encryption.NoEncrypter{}}
 	u.Run("github.com", "abc123")
 	u.Run("gitlab.com", "abc123")
 	u.Run("bitbucket.com", "abc123")
 
-	store, _ := p.Load()
+	names, _ := r.GetEntryNames()
 
-	if len(store.Entries) != 3 {
-		t.Errorf("Expected 3 entries; got %d", len(store.Entries))
+	if len(names) != 3 {
+		t.Errorf("Expected 3 entries; got %d", len(names))
 	}
 
-	RemoveEntry{p}.Run("gitlab.com")
+	RemoveEntry{r}.Run("gitlab.com")
 
-	store, _ = p.Load()
+	names, _ = r.GetEntryNames()
 
-	if len(store.Entries) != 2 {
-		t.Errorf("Expected 2 entries; got %d", len(store.Entries))
+	if len(names) != 2 {
+		t.Errorf("Expected 2 entries; got %d", len(names))
 	}
 }

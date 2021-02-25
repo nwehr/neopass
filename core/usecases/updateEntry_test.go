@@ -7,17 +7,16 @@ import (
 )
 
 func TestUpdateEntry(t *testing.T) {
-	p := DefaultMockPersistor()
+	r := DefaultMockRepository()
 
-	u := AddEntry{p, encryption.NoEncrypter{}}
+	u := AddEntry{r, encryption.NoEncrypter{}}
 	u.Run("github.com", "abc123")
 	u.Run("gitlab.com", "abc123")
 	u.Run("bitbucket.com", "abc123")
 
-	UpdateEntry{p, encryption.NoEncrypter{}}.Run("gitlab.com", "secret")
+	UpdateEntry{r, encryption.NoEncrypter{}}.Run("gitlab.com", "secret")
 
-	store, _ := p.Load()
-	entry, _ := store.Entries.Find("gitlab.com")
+	entry, _ := u.Repository.GetEntry("gitlab.com")
 
 	if entry.Password != "secret" {
 		t.Errorf("Expected password to be 'secret'; got '%s'", entry.Password)

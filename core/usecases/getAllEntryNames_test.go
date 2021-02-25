@@ -8,17 +8,14 @@ import (
 )
 
 func TestGetAllEntryNames(t *testing.T) {
-	p := DefaultMockPersistor()
+	r := DefaultMockRepository()
 
-	u := AddEntry{p, encryption.NoEncrypter{}}
+	u := AddEntry{r, encryption.NoEncrypter{}}
 	u.Run("github.com", "abc123")
 	u.Run("gitlab.com", "abc123")
 	u.Run("bitbucket.com", "abc123")
 
-	names, err := GetAllEntryNames{p}.Run()
-	if err != nil {
-		t.Error(err)
-	}
+	names, _ := r.GetEntryNames()
 
 	if strings.Join(names, ",") != "github.com,gitlab.com,bitbucket.com" {
 		t.Errorf("Expected %s; got %s", "github.com,gitlab.com,bitbucket.com", strings.Join(names, ","))
