@@ -97,5 +97,12 @@ func DefaultFileRepository() FileRepository {
 	usr, _ := user.Current()
 	path := usr.HomeDir + "/.paws/store.json"
 
-	return FileRepository{path}
+	repo := FileRepository{path}
+
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		repo.save(domain.Store{})
+	}
+
+	return repo
 }

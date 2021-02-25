@@ -1,0 +1,80 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: paws-configmap
+data:
+  api.json: |
+    {
+      "listen": ":80"
+      , "authToken": "aegoh1gi0RooheiRaeChesh0maef8pheesoosh3lohmaewaRikahkeishohX9noh"
+    }
+  store.json: |
+    {
+      "identity": ""
+      , "entries": []
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paws
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paws
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: paws
+    spec:
+      containers:
+        - env:
+          image: nwehr/paws
+          imagePullPolicy: Always
+          name: paws
+          volumeMounts:
+          - name: paws-vol
+            mountPath: /root/.paws
+      volumes:
+      - name: paws-vol
+        configMap:
+          name: paws-configmap
+  
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: paws-service
+spec:
+  selector:
+    app: paws
+  ports:
+    - port: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wan
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+  - host: paws.errorcode.io
+    http:
+      paths:
+      - path: /(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: paws-service
+            port:
+              number: 80
+        

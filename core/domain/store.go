@@ -6,11 +6,6 @@ type Store struct {
 	Entries  Entries `json:"entries"`
 }
 
-type StorePersister interface {
-	Load() (Store, error)
-	Save(Store) error
-}
-
 type StoreRepository interface {
 	AddEntry(Entry) error
 	RemoveEntry(string) error

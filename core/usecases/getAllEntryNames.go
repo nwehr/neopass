@@ -1,11 +1,17 @@
 package usecases
 
-import "github.com/nwehr/paws/core/domain"
+import (
+	"sort"
+
+	"github.com/nwehr/paws/core/domain"
+)
 
 type GetAllEntryNames struct {
 	Repository domain.StoreRepository
 }
 
 func (u GetAllEntryNames) Run() ([]string, error) {
-	return u.Repository.GetEntryNames()
+	names, err := u.Repository.GetEntryNames()
+	sort.Strings(names)
+	return names, err
 }

@@ -8,18 +8,32 @@ import (
 	"os/user"
 	"strings"
 
+	"github.com/nwehr/paws/core/domain"
 	"github.com/nwehr/paws/core/usecases"
 	"github.com/nwehr/paws/infrastructure/config"
 	"github.com/nwehr/paws/infrastructure/encryption"
 	"github.com/nwehr/paws/infrastructure/encryption/pgp"
 	"github.com/nwehr/paws/infrastructure/persistance"
 	"github.com/nwehr/paws/interface/api"
+	"github.com/nwehr/paws/interface/cli"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+func repo() (domain.StoreRepository, error) {
+	conf, err := config.LoadCliConfig()
+	var repo domain.StoreRepository
+
+	if conf.StoreLocation != nil && strings.HasPrefix(*conf.StoreLocation, "http") {
+		repo = persistance.ApiRepository{*conf.StoreLocation, *conf.AuthToken}
+	} else {
+		repo = persistance.DefaultFileRepository()
+	}
+
+	return repo, err
+}
+
 func main() {
-	repo := persistance.DefaultFileRepository()
 
 	if weAreInAPipe() {
 		conf, err := config.LoadPgpConfig()
@@ -39,6 +53,13 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+
+		repo, err := repo()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
 		password, err := usecases.GetDecryptedPassword{repo, dec}.Run(name)
 		if err != nil {
 			fmt.Println(err)
@@ -50,6 +71,12 @@ func main() {
 	}
 
 	if len(os.Args) == 1 {
+		repo, err := repo()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
 		names, err := usecases.GetAllEntryNames{repo}.Run()
 		if err != nil {
 			fmt.Println(err)
@@ -59,12 +86,6 @@ func main() {
 		for _, name := range names {
 			fmt.Println(name)
 		}
-		return
-	}
-
-	pgpConfig, err := config.LoadPgpConfig()
-	if err != nil {
-		fmt.Println(err)
 		return
 	}
 
@@ -85,11 +106,28 @@ func main() {
 			return
 		}
 
-		// _, err := p.Load()
-		// if err != nil {
-		// 	p.Save(domain.Store{})
-		// }
+		if err := config.SaveCliConfig(cli.Config{}); err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		if err := config.SaveApiConfig(api.Config{}); err != nil {
+			fmt.Println(err)
+			return
+		}
 	case "add":
+		pgpConfig, err := config.LoadPgpConfig()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		repo, err := repo()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
 		enc, err := pgp.DefaultEncrypter(pgpConfig)
 		if err != nil {
 			fmt.Println(err)
@@ -105,8 +143,14 @@ func main() {
 			return
 		}
 	case "rm":
+		repo, err := repo()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
 		name := os.Args[2]
-		err := usecases.RemoveEntry{repo}.Run(name)
+		err = usecases.RemoveEntry{repo}.Run(name)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -121,6 +165,18 @@ func main() {
 		fmt.Println(api.Api{apiConfig, encryption.NoEncrypter{}, encryption.NoDecrypter{}}.Start())
 		return
 	default:
+		repo, err := repo()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		pgpConfig, err := config.LoadPgpConfig()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
 		dec, err := pgp.DefaultDecrypter(pgpConfig)
 		if err != nil {
 			fmt.Println(err)
