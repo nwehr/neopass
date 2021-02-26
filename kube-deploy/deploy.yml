@@ -9,11 +9,11 @@ data:
       "listen": ":80"
       , "authToken": "aegoh1gi0RooheiRaeChesh0maef8pheesoosh3lohmaewaRikahkeishohX9noh"
     }
-  store.json: |
+  paws.json: |
     {
-      "identity": ""
-      , "entries": []
+      "store": "postgres://user:password@host:port/database"
     }
+    
 ---
 apiVersion: apps/v1
 kind: Deployment

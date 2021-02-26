@@ -27,12 +27,12 @@ func repo() (domain.StoreRepository, error) {
 
 	if conf.StoreLocation != nil && strings.HasPrefix(*conf.StoreLocation, "http") {
 		repo = persistance.ApiRepository{*conf.StoreLocation, *conf.AuthToken}
-	} else if conf.StoreLocation != nil && strings.HasPrefix(*conf.StoreLocation, "postgresql") {
+	} else if conf.StoreLocation != nil && strings.HasPrefix(*conf.StoreLocation, "postgres") {
 		re := regexp.MustCompile(`(.*):\/\/(.*):(.*)\@(.*):(.*)\/(.*)`)
 		matches := re.FindAllStringSubmatch(*conf.StoreLocation, -1)
 
 		if len(matches[0]) < 7 {
-			return nil, fmt.Errorf("sql dsn expects format postgresql://user:password@host:port/database")
+			return nil, fmt.Errorf("sql dsn expects format postgres://user:password@host:port/database")
 		}
 
 		dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s database=%s sslmode=disable",
