@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"os/user"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/nwehr/paws/core/domain"
 	"github.com/nwehr/paws/core/usecases"
@@ -159,6 +161,36 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+
+	case "gen":
+		pgpConfig, err := config.LoadPgpConfig()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		repo, err := repo()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		enc, err := pgp.DefaultEncrypter(pgpConfig)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		name := os.Args[2]
+		password := generatePassword()
+
+		err = usecases.AddEntry{repo, enc}.Run(name, string(password))
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Println(password)
 	case "rm":
 		repo, err := repo()
 		if err != nil {
@@ -268,4 +300,26 @@ func nameFromPipe() (string, error) {
 	name := strings.TrimSpace(runesToString(output))
 	return name, nil
 
+}
+
+func generatePassword() string {
+	rand.Seed(time.Now().UnixNano())
+
+	chars := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+	segment := func() string {
+		segment := []byte{}
+
+		for {
+			segment = append(segment, chars[rand.Intn(len(chars))])
+
+			if len(segment) == 4 {
+				break
+			}
+		}
+
+		return string(segment)
+	}
+
+	return fmt.Sprintf("%s-%s-%s-%s", segment(), segment(), segment(), segment())
 }

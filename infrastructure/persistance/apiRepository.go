@@ -76,7 +76,3 @@ func (r ApiRepository) GetEntryNames() ([]string, error) {
 
 	return names, err
 }
-
-func DefaultApiRepository() ApiRepository {
-	return ApiRepository{"http://pg.home.lan:5050", "liefeehahzaiz6Rei5xohthu6eenie9iexu2quae2jeothei6ohbal9vai0zohJe"}
-}
