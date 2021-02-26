@@ -27,11 +27,17 @@ func repo() (domain.StoreRepository, error) {
 	conf, err := config.LoadCliConfig()
 	var repo domain.StoreRepository
 
-	if conf.StoreLocation != nil && strings.HasPrefix(*conf.StoreLocation, "http") {
-		repo = persistance.ApiRepository{*conf.StoreLocation, *conf.AuthToken}
-	} else if conf.StoreLocation != nil && strings.HasPrefix(*conf.StoreLocation, "postgres") {
+	ctx, err := conf.GetCurrentContext()
+	if err != nil {
+		fmt.Println(err)
+		return repo, err
+	}
+
+	if ctx.StoreLocation != nil && strings.HasPrefix(*ctx.StoreLocation, "http") {
+		repo = persistance.ApiRepository{*ctx.StoreLocation, *ctx.AuthToken}
+	} else if ctx.StoreLocation != nil && strings.HasPrefix(*ctx.StoreLocation, "postgres") {
 		re := regexp.MustCompile(`(.*):\/\/(.*):(.*)\@(.*):(.*)\/(.*)`)
-		matches := re.FindAllStringSubmatch(*conf.StoreLocation, -1)
+		matches := re.FindAllStringSubmatch(*ctx.StoreLocation, -1)
 
 		if len(matches[0]) < 7 {
 			return nil, fmt.Errorf("sql dsn expects format postgres://user:password@host:port/database")
@@ -53,7 +59,6 @@ func repo() (domain.StoreRepository, error) {
 }
 
 func main() {
-
 	if weAreInAPipe() {
 		conf, err := config.LoadPgpConfig()
 		if err != nil {
@@ -109,7 +114,7 @@ func main() {
 	}
 
 	switch os.Args[1] {
-	case "init":
+	case "-i":
 		identity := os.Args[2]
 
 		usr, _ := user.Current()
@@ -134,7 +139,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-	case "add":
+	case "-a":
 		pgpConfig, err := config.LoadPgpConfig()
 		if err != nil {
 			fmt.Println(err)
@@ -162,7 +167,7 @@ func main() {
 			return
 		}
 
-	case "gen":
+	case "-g":
 		pgpConfig, err := config.LoadPgpConfig()
 		if err != nil {
 			fmt.Println(err)
@@ -191,7 +196,7 @@ func main() {
 		}
 
 		fmt.Println(password)
-	case "rm":
+	case "-r":
 		repo, err := repo()
 		if err != nil {
 			fmt.Println(err)
@@ -203,6 +208,28 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 			return
+		}
+	case "-c":
+		conf, err := config.LoadCliConfig()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		if len(os.Args) == 3 {
+			conf.CurrentContext = os.Args[2]
+			config.SaveCliConfig(conf)
+			return
+		}
+
+		for _, ctx := range conf.Contexts {
+			marker := "  "
+
+			if ctx.Name == conf.CurrentContext {
+				marker = "->"
+			}
+
+			fmt.Printf("%s %s\n", marker, ctx.Name)
 		}
 	case "start-server":
 		apiConfig, err := config.LoadApiConfig()

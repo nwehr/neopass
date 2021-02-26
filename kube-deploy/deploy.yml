@@ -11,8 +11,15 @@ data:
     }
   paws.json: |
     {
-      "store": "postgres://user:password@host:port/database"
+      "currentContext": "default"
+      , "contexts": [
+        {
+          "name": "default"
+          , "store": "postgres://user:password@host:port/database"
+        }
+      ]
     }
+    
     
 ---
 apiVersion: apps/v1
