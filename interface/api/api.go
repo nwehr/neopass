@@ -8,15 +8,16 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/nwehr/paws/core/domain"
 	"github.com/nwehr/paws/core/usecases"
 	"github.com/nwehr/paws/infrastructure/encryption"
-	"github.com/nwehr/paws/infrastructure/persistance"
 )
 
 type Api struct {
-	ApiConfig Config
-	Encrypter encryption.Encrypter
-	Decrypter encryption.Decrypter
+	ApiConfig  Config
+	Repository domain.StoreRepository
+	Encrypter  encryption.Encrypter
+	Decrypter  encryption.Decrypter
 }
 
 func (iface Api) Start() error {
@@ -24,11 +25,11 @@ func (iface Api) Start() error {
 
 	r.Use(RequireAuthorization(iface.ApiConfig.AuthToken))
 
-	r.HandleFunc("/", GetAllEntriesHandler).Methods("GET")
-	r.HandleFunc("/{name}", GetPasswordHandler(iface.Decrypter)).Methods("GET")
-	r.HandleFunc("/add/{name}", AddEntryHandler(iface.Encrypter)).Methods("POST")
-	r.HandleFunc("/update/{name}", UpdateEntryHandler(iface.Encrypter)).Methods("POST")
-	r.HandleFunc("/rm/{name}", RemoveEntryHandler).Methods("POST")
+	r.HandleFunc("/", GetAllEntriesHandler(iface.Repository)).Methods("GET")
+	r.HandleFunc("/{name}", GetPasswordHandler(iface.Repository, iface.Decrypter)).Methods("GET")
+	r.HandleFunc("/add/{name}", AddEntryHandler(iface.Repository, iface.Encrypter)).Methods("POST")
+	r.HandleFunc("/update/{name}", UpdateEntryHandler(iface.Repository, iface.Encrypter)).Methods("POST")
+	r.HandleFunc("/rm/{name}", RemoveEntryHandler(iface.Repository)).Methods("POST")
 
 	fmt.Printf("listening on %s\n", iface.ApiConfig.Listen)
 
@@ -57,22 +58,20 @@ func RequireAuthorization(authToken string) mux.MiddlewareFunc {
 	}
 }
 
-func GetAllEntriesHandler(w http.ResponseWriter, r *http.Request) {
-	repo := persistance.DefaultFileRepository()
+func GetAllEntriesHandler(repo domain.StoreRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		names, err := usecases.GetAllEntryNames{repo}.Run()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-	names, err := usecases.GetAllEntryNames{repo}.Run()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		json.NewEncoder(w).Encode(names)
 	}
-
-	json.NewEncoder(w).Encode(names)
 }
 
-func GetPasswordHandler(dec encryption.Decrypter) http.HandlerFunc {
+func GetPasswordHandler(repo domain.StoreRepository, dec encryption.Decrypter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		repo := persistance.DefaultFileRepository()
-
 		name := mux.Vars(r)["name"]
 		password, err := usecases.GetDecryptedPassword{repo, dec}.Run(name)
 		if err != nil {
@@ -85,10 +84,8 @@ func GetPasswordHandler(dec encryption.Decrypter) http.HandlerFunc {
 	}
 }
 
-func AddEntryHandler(enc encryption.Encrypter) http.HandlerFunc {
+func AddEntryHandler(repo domain.StoreRepository, enc encryption.Encrypter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		repo := persistance.DefaultFileRepository()
-
 		name := mux.Vars(r)["name"]
 		password, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -101,10 +98,8 @@ func AddEntryHandler(enc encryption.Encrypter) http.HandlerFunc {
 	}
 }
 
-func UpdateEntryHandler(enc encryption.Encrypter) http.HandlerFunc {
+func UpdateEntryHandler(repo domain.StoreRepository, enc encryption.Encrypter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		repo := persistance.DefaultFileRepository()
-
 		name := mux.Vars(r)["name"]
 		password, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -117,11 +112,11 @@ func UpdateEntryHandler(enc encryption.Encrypter) http.HandlerFunc {
 	}
 }
 
-func RemoveEntryHandler(w http.ResponseWriter, r *http.Request) {
-	repo := persistance.DefaultFileRepository()
-
-	name := mux.Vars(r)["name"]
-	if err := (usecases.RemoveEntry{repo}.Run(name)); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+func RemoveEntryHandler(repo domain.StoreRepository) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := mux.Vars(r)["name"]
+		if err := (usecases.RemoveEntry{repo}.Run(name)); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
 }

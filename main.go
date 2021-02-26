@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/user"
+	"regexp"
 	"strings"
 
 	"github.com/nwehr/paws/core/domain"
@@ -26,6 +27,22 @@ func repo() (domain.StoreRepository, error) {
 
 	if conf.StoreLocation != nil && strings.HasPrefix(*conf.StoreLocation, "http") {
 		repo = persistance.ApiRepository{*conf.StoreLocation, *conf.AuthToken}
+	} else if conf.StoreLocation != nil && strings.HasPrefix(*conf.StoreLocation, "postgresql") {
+		re := regexp.MustCompile(`(.*):\/\/(.*):(.*)\@(.*):(.*)\/(.*)`)
+		matches := re.FindAllStringSubmatch(*conf.StoreLocation, -1)
+
+		if len(matches[0]) < 7 {
+			return nil, fmt.Errorf("sql dsn expects format postgresql://user:password@host:port/database")
+		}
+
+		dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s database=%s sslmode=disable",
+			matches[0][4],
+			matches[0][5],
+			matches[0][2],
+			matches[0][3],
+			matches[0][6])
+
+		return persistance.NewSqlRepository(matches[0][1], dsn)
 	} else {
 		repo = persistance.DefaultFileRepository()
 	}
@@ -162,7 +179,13 @@ func main() {
 			return
 		}
 
-		fmt.Println(api.Api{apiConfig, encryption.NoEncrypter{}, encryption.NoDecrypter{}}.Start())
+		repo, err := repo()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Println(api.Api{apiConfig, repo, encryption.NoEncrypter{}, encryption.NoDecrypter{}}.Start())
 		return
 	default:
 		repo, err := repo()
