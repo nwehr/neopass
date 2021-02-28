@@ -1,12 +1,12 @@
 package usecases
 
 import (
-	"github.com/nwehr/paws/core/domain"
-	"github.com/nwehr/paws/infrastructure/encryption"
+	"github.com/nwehr/npass/core/domain"
+	"github.com/nwehr/npass/infrastructure/encryption"
 )
 
 type GetDecryptedPassword struct {
-	Repository domain.StoreRepository
+	Repository domain.Repository
 	Decrypter  encryption.Decrypter
 }
 

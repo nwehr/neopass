@@ -1,9 +1,9 @@
 FROM golang:latest
 
-WORKDIR /paws
+WORKDIR /neopass
 COPY . .
 
 RUN go get -d -v ./... \
     && go install -v ./...
 
-CMD ["paws", "start-server"]
+CMD ["neopass", "start-server"]

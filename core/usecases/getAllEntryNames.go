@@ -3,11 +3,11 @@ package usecases
 import (
 	"sort"
 
-	"github.com/nwehr/paws/core/domain"
+	"github.com/nwehr/npass/core/domain"
 )
 
 type GetAllEntryNames struct {
-	Repository domain.StoreRepository
+	Repository domain.Repository
 }
 
 func (u GetAllEntryNames) Run() ([]string, error) {

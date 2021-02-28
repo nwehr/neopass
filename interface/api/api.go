@@ -8,14 +8,14 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/nwehr/paws/core/domain"
-	"github.com/nwehr/paws/core/usecases"
-	"github.com/nwehr/paws/infrastructure/encryption"
+	"github.com/nwehr/npass/core/domain"
+	"github.com/nwehr/npass/core/usecases"
+	"github.com/nwehr/npass/infrastructure/encryption"
 )
 
 type Api struct {
 	ApiConfig  Config
-	Repository domain.StoreRepository
+	Repository domain.Repository
 	Encrypter  encryption.Encrypter
 	Decrypter  encryption.Decrypter
 }
@@ -58,7 +58,7 @@ func RequireAuthorization(authToken string) mux.MiddlewareFunc {
 	}
 }
 
-func GetAllEntriesHandler(repo domain.StoreRepository) http.HandlerFunc {
+func GetAllEntriesHandler(repo domain.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		names, err := usecases.GetAllEntryNames{repo}.Run()
 		if err != nil {
@@ -70,7 +70,7 @@ func GetAllEntriesHandler(repo domain.StoreRepository) http.HandlerFunc {
 	}
 }
 
-func GetPasswordHandler(repo domain.StoreRepository, dec encryption.Decrypter) http.HandlerFunc {
+func GetPasswordHandler(repo domain.Repository, dec encryption.Decrypter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 		password, err := usecases.GetDecryptedPassword{repo, dec}.Run(name)
@@ -84,7 +84,7 @@ func GetPasswordHandler(repo domain.StoreRepository, dec encryption.Decrypter) h
 	}
 }
 
-func AddEntryHandler(repo domain.StoreRepository, enc encryption.Encrypter) http.HandlerFunc {
+func AddEntryHandler(repo domain.Repository, enc encryption.Encrypter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 		password, err := ioutil.ReadAll(r.Body)
@@ -98,7 +98,7 @@ func AddEntryHandler(repo domain.StoreRepository, enc encryption.Encrypter) http
 	}
 }
 
-func UpdateEntryHandler(repo domain.StoreRepository, enc encryption.Encrypter) http.HandlerFunc {
+func UpdateEntryHandler(repo domain.Repository, enc encryption.Encrypter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 		password, err := ioutil.ReadAll(r.Body)
@@ -112,7 +112,7 @@ func UpdateEntryHandler(repo domain.StoreRepository, enc encryption.Encrypter) h
 	}
 }
 
-func RemoveEntryHandler(repo domain.StoreRepository) http.HandlerFunc {
+func RemoveEntryHandler(repo domain.Repository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := mux.Vars(r)["name"]
 		if err := (usecases.RemoveEntry{repo}.Run(name)); err != nil {

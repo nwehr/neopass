@@ -3,7 +3,7 @@ package usecases
 import (
 	"testing"
 
-	"github.com/nwehr/paws/infrastructure/encryption"
+	"github.com/nwehr/npass/infrastructure/encryption"
 )
 
 func TestUpdateEntry(t *testing.T) {

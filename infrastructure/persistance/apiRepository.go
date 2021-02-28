@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/nwehr/paws/core/domain"
+	"github.com/nwehr/npass/core/domain"
 )
 
 type ApiRepository struct {
@@ -55,7 +55,7 @@ func (r ApiRepository) GetEntry(name string) (domain.Entry, error) {
 
 	password, err := ioutil.ReadAll(res.Body)
 
-	return domain.Entry{name, string(password)}, err
+	return domain.Entry{Name: name, Password: string(password)}, err
 }
 
 func (r ApiRepository) GetEntryNames() ([]string, error) {

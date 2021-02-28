@@ -1,17 +1,17 @@
-## Paws
+## npass
 
-`paws` is a password manager inspired by [pass](https://www.passwordstore.org) but is a little simpler and designed to work with pipes. For example, you can fuzzy search your passwords on the console by using `fzf`.
+`npass` (NeoPass) is a password manager inspired by [pass](https://www.passwordstore.org) but is a little simpler and designed to work with pipes. For example, you can fuzzy find your passwords on the console by using `fzf`.
 
 ```
-$ paws | fzf | paws
+$ npass | fzf | npass
 ```
 
-All passwords are encrypted/decrypted using your gpg key and are stored in `~/.paws/store.json`. Passwords are never displayed on the console and therefore should never leaked into your command history or a log file.
+All passwords are encrypted/decrypted using your gpg key and are stored in `~/.npass/store.json`. Passwords are never displayed on the console and therefore should never leaked into your command history or a log file.
 
 ## Install
 
 ```
-$ go get -u github.com/nwehr/paws
+$ go get -u github.com/nwehr/npass
 ```
 
 ## Usage
@@ -19,13 +19,13 @@ $ go get -u github.com/nwehr/paws
 Initializing the store (you must already have a gpg key):
 
 ```
-$ paws init me@example.com
+$ npass init me@example.com
 ```
 
 List existing passwords:
 
 ```
-$ paws
+$ npass
 github.com
 digitalocean.com
 gitlab.com
@@ -38,7 +38,7 @@ bitpay.com
 Retrieve password:
 
 ```
-$ paws github.com
+$ npass github.com
 passphrase: 
 copied to clipboard
 ```
@@ -46,12 +46,12 @@ copied to clipboard
 Add a new password:
 
 ```
-$ paws add example.com
+$ npass add example.com
 password: 
 ```
 
 Remove a password:
 
 ```
-$ paws rm example.com
+$ npass rm example.com
 ```

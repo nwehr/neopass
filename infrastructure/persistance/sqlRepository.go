@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	_ "github.com/lib/pq"
-	"github.com/nwehr/paws/core/domain"
+	"github.com/nwehr/npass/core/domain"
 )
 
 type SqlRepository struct {

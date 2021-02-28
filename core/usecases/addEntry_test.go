@@ -2,10 +2,11 @@ package usecases
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
-	"github.com/nwehr/paws/core/domain"
-	"github.com/nwehr/paws/infrastructure/encryption"
+	"github.com/nwehr/npass/core/domain"
+	"github.com/nwehr/npass/infrastructure/encryption"
 )
 
 func TestAddEntry(t *testing.T) {
@@ -23,6 +24,10 @@ func TestAddEntry(t *testing.T) {
 	}
 }
 
+type store struct {
+	Entries domain.Entries `json:"entries"`
+}
+
 type MockRepository struct {
 	Memory []byte
 }
@@ -33,9 +38,7 @@ func (p *MockRepository) AddEntry(entry domain.Entry) error {
 		return err
 	}
 
-	if err = store.Entries.Add(entry); err != nil {
-		return err
-	}
+	store.Entries = append(store.Entries, entry)
 
 	return p.save(store)
 }
@@ -46,11 +49,14 @@ func (p *MockRepository) RemoveEntry(name string) error {
 		return err
 	}
 
-	if err = store.Entries.Remove(name); err != nil {
-		return err
+	for i, current := range store.Entries {
+		if current.Name == name {
+			store.Entries = append(store.Entries[:i], store.Entries[i+1:]...)
+			return p.save(store)
+		}
 	}
 
-	return p.save(store)
+	return fmt.Errorf("Not found")
 }
 
 func (p MockRepository) GetEntry(name string) (domain.Entry, error) {
@@ -59,7 +65,13 @@ func (p MockRepository) GetEntry(name string) (domain.Entry, error) {
 		return domain.Entry{}, err
 	}
 
-	return store.Entries.Find(name)
+	for _, entry := range store.Entries {
+		if entry.Name == name {
+			return entry, nil
+		}
+	}
+
+	return domain.Entry{}, fmt.Errorf("Not found")
 }
 
 func (p MockRepository) GetEntryNames() ([]string, error) {
@@ -77,14 +89,14 @@ func (p MockRepository) GetEntryNames() ([]string, error) {
 	return names, nil
 }
 
-func (p MockRepository) load() (domain.Store, error) {
-	store := domain.Store{}
+func (p MockRepository) load() (store, error) {
+	store := store{}
 	err := json.Unmarshal(p.Memory, &store)
 
 	return store, err
 }
 
-func (p *MockRepository) save(store domain.Store) (err error) {
+func (p *MockRepository) save(store store) (err error) {
 	p.Memory, err = json.Marshal(store)
 	return err
 }

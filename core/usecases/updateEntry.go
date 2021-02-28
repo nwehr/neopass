@@ -1,12 +1,12 @@
 package usecases
 
 import (
-	"github.com/nwehr/paws/core/domain"
-	"github.com/nwehr/paws/infrastructure/encryption"
+	"github.com/nwehr/npass/core/domain"
+	"github.com/nwehr/npass/infrastructure/encryption"
 )
 
 type UpdateEntry struct {
-	Repository domain.StoreRepository
+	Repository domain.Repository
 	Encrypter  encryption.Encrypter
 }
 
@@ -26,5 +26,5 @@ func (u UpdateEntry) Run(name, password string) error {
 		return err
 	}
 
-	return u.Repository.AddEntry(domain.Entry{name, encryptedPassword})
+	return u.Repository.AddEntry(domain.Entry{Name: name, Password: encryptedPassword})
 }

@@ -12,37 +12,30 @@ import (
 )
 
 type PGPDecrypter struct {
-	Identity      string
 	SecretKeyring openpgp.EntityList
 	GetPassphrase func() ([]byte, error)
 }
 
 func (d PGPDecrypter) Decrypt(text string) (string, error) {
-	keyByNameOrEmail := func(nameOrEmail string) (*openpgp.Entity, error) {
-		for _, key := range d.SecretKeyring {
-			for _, identity := range key.Identities {
-				if nameOrEmail == identity.UserId.Name || nameOrEmail == identity.UserId.Email {
-					return key, nil
-				}
+	prompt := func(keys []openpgp.Key, symmetric bool) ([]byte, error) {
+		for _, key := range keys {
+			for identity := range key.Entity.Identities {
+				fmt.Println(identity)
+				break
+			}
+
+			passphrase, err := d.GetPassphrase()
+			if err != nil {
+				return nil, err
+			}
+
+			key.Entity.PrivateKey.Decrypt(passphrase)
+			for _, subkey := range key.Entity.Subkeys {
+				subkey.PrivateKey.Decrypt(passphrase)
 			}
 		}
 
-		return nil, fmt.Errorf("entity %s does not exist", nameOrEmail)
-	}
-
-	key, err := keyByNameOrEmail(d.Identity)
-	if err != nil {
-		return "", err
-	}
-
-	passphrase, err := d.GetPassphrase()
-	if err != nil {
-		return "", err
-	}
-
-	key.PrivateKey.Decrypt(passphrase)
-	for _, subkey := range key.Subkeys {
-		subkey.PrivateKey.Decrypt(passphrase)
+		return nil, nil
 	}
 
 	password, err := base64.StdEncoding.DecodeString(text)
@@ -50,7 +43,7 @@ func (d PGPDecrypter) Decrypt(text string) (string, error) {
 		return "", err
 	}
 
-	md, err := openpgp.ReadMessage(bytes.NewBuffer(password), d.SecretKeyring, nil, nil)
+	md, err := openpgp.ReadMessage(bytes.NewBuffer(password), d.SecretKeyring, prompt, nil)
 	if err != nil {
 		return "", err
 	}
@@ -71,7 +64,6 @@ func DefaultDecrypter(config Config) (PGPDecrypter, error) {
 	}
 
 	return PGPDecrypter{
-		Identity:      config.Identity,
 		SecretKeyring: keyring,
 		GetPassphrase: func() ([]byte, error) {
 			fmt.Print("passphrase: ")

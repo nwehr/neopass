@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nwehr/paws/infrastructure/encryption"
+	"github.com/nwehr/npass/infrastructure/encryption"
 )
 
 func TestGetAllEntryNames(t *testing.T) {

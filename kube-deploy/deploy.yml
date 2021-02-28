@@ -4,11 +4,6 @@ kind: ConfigMap
 metadata:
   name: paws-configmap
 data:
-  api.json: |
-    {
-      "listen": ":80"
-      , "authToken": "aegoh1gi0RooheiRaeChesh0maef8pheesoosh3lohmaewaRikahkeishohX9noh"
-    }
   paws.json: |
     {
       "currentContext": "default"
@@ -16,6 +11,10 @@ data:
         {
           "name": "default"
           , "store": "postgres://user:password@host:port/database"
+          , "api": {
+            "listen": ":80"
+            , "authToken": "aegoh1gi0RooheiRaeChesh0maef8pheesoosh3lohmaewaRikahkeishohX9noh"
+          }
         }
       ]
     }

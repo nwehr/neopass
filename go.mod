@@ -1,4 +1,4 @@
-module github.com/nwehr/paws
+module github.com/nwehr/npass
 
 go 1.15
 

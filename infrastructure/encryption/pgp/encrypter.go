@@ -3,37 +3,31 @@ package pgp
 import (
 	"bytes"
 	"encoding/base64"
-	"fmt"
 	"os"
 
 	"golang.org/x/crypto/openpgp"
 )
 
 type PGPEncrypter struct {
-	Identity      string
+	Identities    []string
 	PublicKeyring openpgp.EntityList
 }
 
 func (e PGPEncrypter) Encrypt(password string) (string, error) {
-	entityByNameOrEmail := func(nameOrEmail string) (*openpgp.Entity, error) {
-		for _, entity := range e.PublicKeyring {
-			for _, identity := range entity.Identities {
-				if nameOrEmail == identity.UserId.Name || nameOrEmail == identity.UserId.Email {
-					return entity, nil
+	keys := openpgp.EntityList{}
+
+	for _, key := range e.PublicKeyring {
+		for _, keyIdentity := range key.Identities {
+			for _, identity := range e.Identities {
+				if identity == keyIdentity.UserId.Name || identity == keyIdentity.UserId.Email {
+					keys = append(keys, key)
 				}
 			}
 		}
-
-		return nil, fmt.Errorf("entity %s does not exist", nameOrEmail)
-	}
-
-	entity, err := entityByNameOrEmail(e.Identity)
-	if err != nil {
-		return "", err
 	}
 
 	ciphertext := new(bytes.Buffer)
-	plaintext, err := openpgp.Encrypt(ciphertext, openpgp.EntityList{entity}, nil, nil, nil)
+	plaintext, err := openpgp.Encrypt(ciphertext, keys, nil, nil, nil)
 	if err != nil {
 		return "", err
 	}
@@ -55,5 +49,5 @@ func DefaultEncrypter(config Config) (PGPEncrypter, error) {
 	}
 
 	keyring, err := openpgp.ReadKeyRing(keyringFile)
-	return PGPEncrypter{Identity: config.Identity, PublicKeyring: keyring}, err
+	return PGPEncrypter{Identities: config.Identities, PublicKeyring: keyring}, err
 }
