@@ -17,7 +17,8 @@ import (
 func main() {
 	conf, err := cli.LoadConfig()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("could not open config:", err)
+		cli.Cli{nil, nil, nil}.Init()
 		return
 	}
 
@@ -29,7 +30,7 @@ func main() {
 		return
 	}
 
-	if len(os.Args) > 1 && os.Args[1] == "start-server" {
+	if len(os.Args) > 1 && os.Args[1] == "--server" {
 		fmt.Println(api.Api{*ctx.Api, repo, encryption.NoEncrypter{}, encryption.NoDecrypter{}}.Start())
 		return
 	}
@@ -37,13 +38,11 @@ func main() {
 	enc, err := pgp.DefaultEncrypter(*ctx.Pgp)
 	if err != nil {
 		fmt.Println(err)
-		return
 	}
 
 	dec, err := pgp.DefaultDecrypter(*ctx.Pgp)
 	if err != nil {
 		fmt.Println(err)
-		return
 	}
 
 	cli.Cli{repo, enc, dec}.Start(os.Args)

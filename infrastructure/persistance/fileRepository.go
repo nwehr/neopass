@@ -5,13 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"path/filepath"
 
 	"github.com/nwehr/npass/core/domain"
 )
-
-type store struct {
-	Entries []domain.Entry `json:"entries"`
-}
 
 type FileRepository struct {
 	Path string
@@ -114,10 +111,20 @@ func DefaultFileRepository() FileRepository {
 func NewFileRepository(path string) FileRepository {
 	repo := FileRepository{path}
 
-	_, err := os.Stat(path)
+	basePath := filepath.Base(path)
+	_, err := os.Stat(basePath)
+	if os.IsNotExist(err) {
+		os.Mkdir(basePath, os.ModeDir)
+	}
+
+	_, err = os.Stat(path)
 	if os.IsNotExist(err) {
 		repo.save(store{})
 	}
 
 	return repo
+}
+
+type store struct {
+	Entries []domain.Entry `json:"entries"`
 }

@@ -59,6 +59,7 @@ func DefaultDecrypter(config Config) (PGPDecrypter, error) {
 	}
 
 	keyring, err := openpgp.ReadKeyRing(keyringFile)
+	// keyring, err := openpgp.ReadArmoredKeyRing(keyringFile)
 	if err != nil {
 		return PGPDecrypter{}, err
 	}

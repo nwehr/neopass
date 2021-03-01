@@ -1,9 +1,10 @@
 FROM golang:latest
 
-WORKDIR /neopass
+WORKDIR /npass
 COPY . .
 
 RUN go get -d -v ./... \
-    && go install -v ./...
+    && go install -v ./... \
+    && mkdir -p /root/.npass
 
-CMD ["neopass", "start-server"]
+CMD ["npass", "--server"]

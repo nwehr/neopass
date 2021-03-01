@@ -3,6 +3,7 @@ package pgp
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"os"
 
 	"golang.org/x/crypto/openpgp"
@@ -20,6 +21,7 @@ func (e PGPEncrypter) Encrypt(password string) (string, error) {
 		for _, keyIdentity := range key.Identities {
 			for _, identity := range e.Identities {
 				if identity == keyIdentity.UserId.Name || identity == keyIdentity.UserId.Email {
+					fmt.Printf("%s <%s>\n", keyIdentity.UserId.Name, keyIdentity.UserId.Email)
 					keys = append(keys, key)
 				}
 			}
@@ -49,5 +51,6 @@ func DefaultEncrypter(config Config) (PGPEncrypter, error) {
 	}
 
 	keyring, err := openpgp.ReadKeyRing(keyringFile)
+	// keyring, err := openpgp.ReadArmoredKeyRing(keyringFile)
 	return PGPEncrypter{Identities: config.Identities, PublicKeyring: keyring}, err
 }
