@@ -269,5 +269,5 @@ func generatePassword() string {
 		return string(segment)
 	}
 
-	return fmt.Sprintf("%s-%s-%s-%s", segment(), segment(), segment(), segment())
+	return fmt.Sprintf("%s+%s+%s+%s", segment(), segment(), segment(), segment())
 }
