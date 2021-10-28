@@ -8,13 +8,14 @@ import (
 
 var fileContents string = `currentStore: default
 stores:
-  - name: default
-    location: /Users/nathanwehr/.npass/local-store.yaml
-    age:
-	  identity: AGE-SECRET-KEY-162TSCYPCQ23JTZANF2PG489XMYL7CWVAC0U38W2JGY83AAMCXVAQLKYS5R
-      recipients:
-        - age1995methg04m2h9e6kvetdlgk853ke0u3trzg4gsspz9jc5jhu4nsu82skj
-`
+    - name: default
+      location: /Users/nathanwehr/.npass/default-store.yaml
+      age:
+        identity: AGE-SECRET-KEY-1G6LU2YVE0HW7A45DV43UTY5NTL6P026E3MK9Z454GU9W7USCRXVQ2238CM
+        piv:
+            slot: 158
+        recipients:
+            - age163l7rnwpa0ymrn0q0vezmlnhe85l4pvpeksenw3jfmye08ge44dq7audfa`
 
 func TestReadConfi(t *testing.T) {
 	file := strings.NewReader(fileContents)
@@ -32,12 +33,12 @@ func TestReadConfi(t *testing.T) {
 		t.Errorf("expected default; got %s", c.Stores[0].Name)
 	}
 
-	if c.Stores[0].Location != "/Users/nathanwehr/.npass/local-store.yaml" {
+	if c.Stores[0].Location != "/Users/nathanwehr/.npass/default-store.yaml" {
 		t.Errorf("expected /Users/nathanwehr/.npass/local-store.yaml; got %s", c.Stores[0].Location)
 	}
 
-	if c.Stores[0].Age.Recipients[0] != "age1995methg04m2h9e6kvetdlgk853ke0u3trzg4gsspz9jc5jhu4nsu82skj" {
-		t.Errorf("expected age1995methg04m2h9e6kvetdlgk853ke0u3trzg4gsspz9jc5jhu4nsu82skj; got %s", c.Stores[0].Age.Recipients[0])
+	if c.Stores[0].Age.Recipients[0] != "age163l7rnwpa0ymrn0q0vezmlnhe85l4pvpeksenw3jfmye08ge44dq7audfa" {
+		t.Errorf("expected age163l7rnwpa0ymrn0q0vezmlnhe85l4pvpeksenw3jfmye08ge44dq7audfa; got %s", c.Stores[0].Age.Recipients[0])
 	}
 }
 
