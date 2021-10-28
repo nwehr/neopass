@@ -12,8 +12,8 @@ import (
 	"github.com/nwehr/npass"
 	"golang.org/x/crypto/ssh/terminal"
 
-	enc "github.com/nwehr/npass/encryption/age"
-	"github.com/nwehr/npass/repos"
+	enc "github.com/nwehr/npass/pkg/encryption/age"
+	"github.com/nwehr/npass/pkg/repos"
 )
 
 func config() (npass.Config, error) {
