@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	mrand "math/rand"
@@ -106,6 +108,7 @@ func main() {
 		fmt.Println("    -g | --gen   name           Generate new entry identified by name")
 		fmt.Println("    -r | --rm    name           Remove entry identified by name")
 		fmt.Println("    -s | --store name           Switch to store identified by name or list stores")
+		fmt.Println("    --import  <file>            Import a csv file of entries")
 		fmt.Println()
 		fmt.Println("  Examples")
 		fmt.Println("     Add a new entry for github.com")
@@ -113,6 +116,53 @@ func main() {
 		fmt.Println()
 		fmt.Println("     Switch to a password store named default")
 		fmt.Println("         npass -s default")
+
+	case "--import":
+		c, err := config()
+		if err != nil {
+			Fatalf("could not load config: %v\n", err)
+		}
+
+		store, err := c.GetCurrentStore()
+		if err != nil {
+			Fatalf("could not get current store: %v\n", err)
+		}
+
+		r := repos.FileRepo{Path: store.Location}
+
+		file, err := os.Open(os.Args[2])
+		if err != nil {
+			Fatalf("could not open csv file: %v\n", err)
+		}
+
+		rows, err := csv.NewReader(file).ReadAll()
+		if err != nil {
+			Fatalf("could not parse csv file: %v\n", err)
+		}
+
+		for _, row := range rows {
+			name := strings.TrimSpace(row[0])
+			plain := strings.TrimSpace(row[1])
+
+			enc, err := enc.NewAgeEncrypter(store.Age.Recipients)
+			if err != nil {
+				Fatalf("could not get encrypter: %v\n", err)
+			}
+
+			encrypted, err := enc.Encrypt(string(plain))
+			if err != nil {
+				Fatalf("could not encrypt password: %v\n", err)
+			}
+
+			entry := npass.Entry{
+				Name:     name,
+				Password: encrypted,
+			}
+
+			if err := r.AddEntry(entry); err != nil {
+				Fatalf("could not add entry: %v\n", err)
+			}
+		}
 
 	case "-a":
 		fallthrough
