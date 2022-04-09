@@ -1,4 +1,4 @@
-package npass
+package config
 
 import (
 	"bytes"
@@ -16,9 +16,32 @@ import (
 	"filippo.io/age"
 
 	"github.com/go-piv/piv-go/piv"
+	"github.com/nwehr/npass"
 	"github.com/nwehr/npass/pkg/cli"
+	"github.com/nwehr/npass/pkg/repos"
 	"gopkg.in/yaml.v3"
 )
+
+type ConfigOptions struct {
+	Path   string
+	Config Config
+}
+
+func GetConfigOptions(args []string) (ConfigOptions, error) {
+	opts := ConfigOptions{
+		Path: DefaultConfigFile,
+	}
+
+	for i, arg := range args {
+		switch arg {
+		case "--config":
+			opts.Path = args[i+1]
+		}
+	}
+
+	err := opts.Config.ReadFile(opts.Path)
+	return opts, err
+}
 
 type Config struct {
 	CurrentStore string        `yaml:"currentStore"`
@@ -204,6 +227,16 @@ func (c Config) GetCurrentStore() (StoreConfig, error) {
 	}
 
 	return StoreConfig{}, fmt.Errorf("not found")
+}
+
+func (c Config) GetCurrentRepo() (npass.EntryRepo, error) {
+	storeConfig, _ := c.GetCurrentStore()
+
+	if storeConfig.Location[0:4] == "http" {
+		return repos.NewHTTPRepo(storeConfig.Location)
+	}
+
+	return repos.NewFileRepo(storeConfig.Location)
 }
 
 func (c *Config) ReadFile(filename string) error {

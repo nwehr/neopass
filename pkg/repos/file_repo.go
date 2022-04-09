@@ -10,15 +10,19 @@ type FileRepo struct {
 	Path string
 }
 
+func NewFileRepo(path string) (npass.EntryRepo, error) {
+	return FileRepo{Path: path}, nil
+}
+
 func (r FileRepo) AddEntry(entry npass.Entry) error {
 	store := npass.Store{}
-	if err := store.ReadFile(npass.DefaultStoreFile); err != nil {
+	if err := store.ReadFile(r.Path); err != nil {
 		return fmt.Errorf("could not load store: %w", err)
 	}
 
 	store.Entries = append(store.Entries, entry)
 
-	if err := store.WriteFile(npass.DefaultStoreFile); err != nil {
+	if err := store.WriteFile(r.Path); err != nil {
 		return fmt.Errorf("could not save store: %v", err)
 	}
 
@@ -27,7 +31,7 @@ func (r FileRepo) AddEntry(entry npass.Entry) error {
 
 func (r FileRepo) RemoveEntryByName(name string) error {
 	store := npass.Store{}
-	if err := store.ReadFile(npass.DefaultStoreFile); err != nil {
+	if err := store.ReadFile(r.Path); err != nil {
 		return fmt.Errorf("could not load store: %w", err)
 	}
 
@@ -35,7 +39,7 @@ func (r FileRepo) RemoveEntryByName(name string) error {
 		if current.Name == name {
 			store.Entries = append(store.Entries[:i], store.Entries[i+1:]...)
 
-			if err := store.WriteFile(npass.DefaultStoreFile); err != nil {
+			if err := store.WriteFile(r.Path); err != nil {
 				return fmt.Errorf("could not save store: %v", err)
 			}
 
@@ -48,7 +52,7 @@ func (r FileRepo) RemoveEntryByName(name string) error {
 
 func (r FileRepo) GetEntryByName(name string) (npass.Entry, error) {
 	store := npass.Store{}
-	if err := store.ReadFile(npass.DefaultStoreFile); err != nil {
+	if err := store.ReadFile(r.Path); err != nil {
 		return npass.Entry{}, fmt.Errorf("could not load store: %w", err)
 	}
 
@@ -63,7 +67,7 @@ func (r FileRepo) GetEntryByName(name string) (npass.Entry, error) {
 
 func (r FileRepo) ListEntryNames() ([]string, error) {
 	store := npass.Store{}
-	if err := store.ReadFile(npass.DefaultStoreFile); err != nil {
+	if err := store.ReadFile(r.Path); err != nil {
 		return nil, fmt.Errorf("could not load store: %w", err)
 	}
 

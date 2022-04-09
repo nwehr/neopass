@@ -1,0 +1,90 @@
+package repos
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+
+	"github.com/nwehr/npass"
+)
+
+type httpRepo struct {
+	BaseURL string
+}
+
+func NewHTTPRepo(baseURL string) (npass.EntryRepo, error) {
+	return httpRepo{BaseURL: baseURL}, nil
+}
+
+func (r httpRepo) AddEntry(entry npass.Entry) error {
+	encoded, err := json.Marshal(entry)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", r.BaseURL, bytes.NewReader(encoded))
+	if err != nil {
+		return err
+	}
+
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r httpRepo) RemoveEntryByName(name string) error {
+	req, err := http.NewRequest("DELETE", r.BaseURL+"&name="+name, nil)
+	if err != nil {
+		return err
+	}
+
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r httpRepo) GetEntryByName(name string) (npass.Entry, error) {
+	entry := npass.Entry{}
+
+	req, err := http.NewRequest("GET", r.BaseURL+"&name="+name, nil)
+	if err != nil {
+		return entry, err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return entry, err
+	}
+
+	defer resp.Body.Close()
+
+	err = json.NewDecoder(resp.Body).Decode(&entry)
+
+	return entry, err
+}
+
+func (r httpRepo) ListEntryNames() ([]string, error) {
+	req, err := http.NewRequest("GET", r.BaseURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	names := []string{}
+
+	json.NewDecoder(resp.Body).Decode(&names)
+
+	return names, nil
+}

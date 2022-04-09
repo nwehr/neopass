@@ -1,4 +1,4 @@
-package npass
+package config
 
 import (
 	"bytes"

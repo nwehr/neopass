@@ -4,121 +4,76 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
-	"time"
-
-	mrand "math/rand"
 
 	"github.com/atotto/clipboard"
 	"github.com/nwehr/npass"
-	"golang.org/x/crypto/ssh/terminal"
 
+	"github.com/nwehr/npass/cmd/client/cmd/add"
+	"github.com/nwehr/npass/cmd/client/cmd/gen"
+	"github.com/nwehr/npass/cmd/client/cmd/initstore"
+	"github.com/nwehr/npass/cmd/client/cmd/ls"
+	"github.com/nwehr/npass/cmd/client/cmd/rm"
+	"github.com/nwehr/npass/pkg/config"
 	enc "github.com/nwehr/npass/pkg/encryption/age"
 	"github.com/nwehr/npass/pkg/repos"
 )
 
-func config() (npass.Config, error) {
-	c := npass.Config{}
-	err := c.ReadFile(npass.DefaultConfigFile)
+func getConfig() (config.Config, error) {
+	c := config.Config{}
+	err := c.ReadFile(config.DefaultConfigFile)
 
 	return c, err
 }
 
 func main() {
 	if len(os.Args) == 1 {
-		c, err := config()
+		opts, err := config.GetConfigOptions(os.Args)
 		if err != nil {
-			Fatalf("could not load config: %v\n", err)
+			Fatalf("%v\n", err)
 		}
 
-		store, err := c.GetCurrentStore()
+		err = ls.RunLs(opts)
 		if err != nil {
-			Fatalf("could not get current store: %v\n", err)
-		}
-
-		r := repos.FileRepo{Path: store.Location}
-
-		names, err := r.ListEntryNames()
-		if err != nil {
-			Fatalf("could not list entry names: %v\n", err)
-		}
-
-		for _, name := range names {
-			fmt.Println(name)
+			Fatalf("%v\n", err)
 		}
 
 		os.Exit(0)
 	}
 
 	switch os.Args[1] {
-	case "-i":
-		fallthrough
-	case "--init":
-		newAgeConfig := func() (npass.AgeConfig, error) {
-			if len(os.Args) > 2 && os.Args[2] == "--piv" {
-				var slotAddr uint32 = 0x9e
-
-				if len(os.Args) > 3 {
-					addr, err := strconv.ParseUint(os.Args[3], 16, 64)
-					if err != nil {
-						return npass.AgeConfig{}, err
-					}
-
-					slotAddr = uint32(addr)
-				}
-
-				return npass.NewPIVAgeConfig(slotAddr)
-			}
-
-			return npass.NewDefaultAgeConfig()
-		}
-
-		ageConfig, err := newAgeConfig()
+	case "init":
+		opts, err := initstore.GetInitOptions(os.Args)
 		if err != nil {
-			fmt.Printf("could not setup initial store: %v", err)
-			os.Exit(1)
+			Fatalf("could not get init options: %v\n", err)
 		}
 
-		c := npass.Config{
-			CurrentStore: "default",
-			Stores: []npass.StoreConfig{
-				{
-					Name:     "default",
-					Location: npass.DefaultStoreFile,
-					Age:      ageConfig,
-				},
-			},
+		err = initstore.RunInit(opts)
+		if err != nil {
+			Fatalf("%v\n", err)
 		}
 
-		if err := c.WriteFile(npass.DefaultConfigFile); err != nil {
-			fmt.Printf("could not write config to file: %v", err)
-			os.Exit(1)
-		}
-
-	case "-h":
-		fallthrough
-	case "--help":
+	case "help":
 		fmt.Println("Usage")
-		fmt.Println("  npass [<option> <name>] | [<name>]")
+		fmt.Println("  npass [<command> <name>] | [<name>]")
 		fmt.Println()
-		fmt.Println("  Options")
-		fmt.Println("    -i | --init [--piv [slot]]  Setup initial store optionaly protected with a security card")
-		fmt.Println("    -a | --add   name           Add entry identified by name")
-		fmt.Println("    -g | --gen   name           Generate new entry identified by name")
-		fmt.Println("    -r | --rm    name           Remove entry identified by name")
-		fmt.Println("    -s | --store name           Switch to store identified by name or list stores")
-		fmt.Println("    --import  <file>            Import a csv file of entries")
+		fmt.Println("  Commands")
+		fmt.Println("    init [--piv [slot]]  Setup initial store optionaly protected with a security card")
+		fmt.Println("    add   name           Add entry identified by name")
+		fmt.Println("    gen   name           Generate new entry identified by name")
+		fmt.Println("    rm    name           Remove entry identified by name")
+		fmt.Println("    store name           Switch to store identified by name or list stores")
+		fmt.Println("    import  <file>       Import a csv file of entries")
 		fmt.Println()
 		fmt.Println("  Examples")
 		fmt.Println("     Add a new entry for github.com")
-		fmt.Println("         npass -a github.com")
+		fmt.Println("         npass add github.com")
 		fmt.Println()
 		fmt.Println("     Switch to a password store named default")
-		fmt.Println("         npass -s default")
+		fmt.Println("         npass store default")
 
-	case "--import":
-		c, err := config()
+	case "import":
+		c, err := getConfig()
 		if err != nil {
 			Fatalf("could not load config: %v\n", err)
 		}
@@ -164,133 +119,66 @@ func main() {
 			}
 		}
 
-	case "-a":
-		fallthrough
-	case "--add":
-		c, err := config()
+	case "add":
+		opts, err := add.GetAddOptions(os.Args)
+		if err != nil {
+			Fatalf("%v\n", err)
+		}
+
+		err = add.RunAdd(opts)
+		if err != nil {
+			Fatalf("%v\n", err)
+		}
+
+	case "gen":
+		opts, err := gen.GetGenOptions(os.Args)
+		if err != nil {
+			Fatalf("%v\n", err)
+		}
+
+		err = gen.RunGen(opts)
+		if err != nil {
+			Fatalf("%v\n", err)
+		}
+
+	case "rm":
+		opts, err := rm.GetRmOptions(os.Args)
+		if err != nil {
+			Fatalf("%v\n", err)
+		}
+
+		err = rm.RunRm(opts)
+		if err != nil {
+			Fatalf("%v\n", err)
+		}
+
+	case "store":
+		opts, err := config.GetConfigOptions(os.Args)
 		if err != nil {
 			Fatalf("could not load config: %v\n", err)
 		}
 
-		store, err := c.GetCurrentStore()
-		if err != nil {
-			Fatalf("could not get current store: %v\n", err)
-		}
-
-		r := repos.FileRepo{Path: store.Location}
-
-		plain, err := ttyPassword()
-		if err != nil {
-			Fatalf("could not get password: %v\n", err)
-		}
-
-		enc, err := enc.NewAgeEncrypter(store.Age.Recipients)
-		if err != nil {
-			Fatalf("could not get encrypter: %v\n", err)
-		}
-
-		encrypted, err := enc.Encrypt(string(plain))
-		if err != nil {
-			Fatalf("could not encrypt password: %v\n", err)
-		}
-
-		entry := npass.Entry{
-			Name:     os.Args[2],
-			Password: encrypted,
-		}
-
-		if err := r.AddEntry(entry); err != nil {
-			Fatalf("could not add entry: %v\n", err)
-		}
-
-	case "-g":
-		fallthrough
-	case "--gen":
-		c, err := config()
-		if err != nil {
-			Fatalf("could not load config: %v\n", err)
-		}
-
-		store, err := c.GetCurrentStore()
-		if err != nil {
-			Fatalf("could not get current store: %v\n", err)
-		}
-
-		r := repos.FileRepo{Path: store.Location}
-
-		plain := genPassword()
-
-		enc, err := enc.NewAgeEncrypter(store.Age.Recipients)
-		if err != nil {
-			Fatalf("could not get encrypter: %v\n", err)
-		}
-
-		encrypted, err := enc.Encrypt(string(plain))
-		if err != nil {
-			Fatalf("could not encrypt password: %v\n", err)
-		}
-
-		entry := npass.Entry{
-			Name:     os.Args[2],
-			Password: encrypted,
-		}
-
-		if err := r.AddEntry(entry); err != nil {
-			Fatalf("could not add entry: %v\n", err)
-		}
-
-		if err = clipboard.WriteAll(plain); err != nil {
-			Fatalf("coult not write password to clipboard: %v", err)
-		}
-
-		fmt.Println("copied to clipboard")
-
-	case "-r":
-		fallthrough
-	case "--rm":
-		c, err := config()
-		if err != nil {
-			Fatalf("could not load config: %v\n", err)
-		}
-
-		store, err := c.GetCurrentStore()
-		if err != nil {
-			Fatalf("coult not get current store: %v", err)
-		}
-
-		r := repos.FileRepo{Path: store.Location}
-
-		if err = r.RemoveEntryByName(os.Args[2]); err != nil {
-			Fatalf("could not remove entry : %v", err)
-		}
-
-	case "-s":
-		c, err := config()
-		if err != nil {
-			Fatalf("could not load config: %v\n", err)
-		}
-
-		for _, store := range c.Stores {
+		for _, store := range opts.Config.Stores {
 			marker := "  "
 
-			if store.Name == c.CurrentStore {
+			if store.Name == opts.Config.CurrentStore {
 				marker = "->"
 			}
 
 			fmt.Printf("%s %s\n", marker, store.Name)
 		}
 	default:
-		c, err := config()
+		opts, err := config.GetConfigOptions(os.Args)
 		if err != nil {
 			Fatalf("could not load config: %v\n", err)
 		}
 
-		store, err := c.GetCurrentStore()
+		store, err := opts.Config.GetCurrentStore()
 		if err != nil {
 			Fatalf("could not get current store: %v\n", err)
 		}
 
-		r := repos.FileRepo{Path: store.Location}
+		r, err := opts.Config.GetCurrentRepo()
 
 		entry, err := r.GetEntryByName(os.Args[1])
 		if err != nil {
@@ -320,43 +208,7 @@ func main() {
 	}
 }
 
-func ttyPassword() ([]byte, error) {
-	fmt.Print("password: ")
-
-	tty, err := os.Open("/dev/tty")
-	if err != nil {
-		return nil, err
-	}
-
-	defer tty.Close()
-	defer fmt.Println()
-
-	return terminal.ReadPassword(int(tty.Fd()))
-}
-
-func genPassword() string {
-	mrand.Seed(time.Now().UnixNano())
-
-	chars := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-
-	segment := func() string {
-		segment := []byte{}
-
-		for {
-			segment = append(segment, chars[mrand.Intn(len(chars))])
-
-			if len(segment) == 4 {
-				break
-			}
-		}
-
-		return string(segment)
-	}
-
-	return fmt.Sprintf("%s+%s+%s+%s", segment(), segment(), segment(), segment())
-}
-
 func Fatalf(format string, a ...interface{}) {
-	fmt.Printf(format, a...)
+	fmt.Fprintf(os.Stderr, format, a...)
 	os.Exit(1)
 }
