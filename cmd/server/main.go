@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v4"
-	"github.com/nwehr/npass"
+	"github.com/nwehr/neopass"
 )
 
 func main() {
@@ -63,7 +63,7 @@ func getEntryHandler(conn *pgx.Conn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clientUUID := mux.Vars(r)["client_uuid"]
 
-		entry := npass.Entry{
+		entry := neopass.Entry{
 			Name: mux.Vars(r)["name"],
 		}
 
@@ -77,7 +77,7 @@ func postEntryHandler(conn *pgx.Conn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clientUUID := mux.Vars(r)["client_uuid"]
 
-		entry := npass.Entry{}
+		entry := neopass.Entry{}
 
 		json.NewDecoder(r.Body).Decode(&entry)
 

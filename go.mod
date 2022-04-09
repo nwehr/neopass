@@ -1,4 +1,4 @@
-module github.com/nwehr/npass
+module github.com/nwehr/neopass
 
 go 1.16
 

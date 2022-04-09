@@ -6,11 +6,11 @@ import (
 
 	mrand "math/rand"
 
-	"github.com/nwehr/npass/pkg/config"
-	enc "github.com/nwehr/npass/pkg/encryption/age"
+	"github.com/nwehr/neopass/pkg/config"
+	enc "github.com/nwehr/neopass/pkg/encryption/age"
 
 	"github.com/atotto/clipboard"
-	"github.com/nwehr/npass"
+	"github.com/nwehr/neopass"
 )
 
 type GenOptions struct {
@@ -48,7 +48,7 @@ func RunGen(opts GenOptions) error {
 		return fmt.Errorf("could not encrypt password: %v\n", err)
 	}
 
-	entry := npass.Entry{
+	entry := neopass.Entry{
 		Name:     opts.Name,
 		Password: encrypted,
 	}

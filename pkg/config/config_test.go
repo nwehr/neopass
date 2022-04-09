@@ -9,7 +9,7 @@ import (
 var fileContents string = `currentStore: default
 stores:
     - name: default
-      location: /Users/nathanwehr/.npass/default-store.yaml
+      location: /Users/nathanwehr/.neopass/default-store.yaml
       age:
         identity: AGE-SECRET-KEY-1G6LU2YVE0HW7A45DV43UTY5NTL6P026E3MK9Z454GU9W7USCRXVQ2238CM
         piv:
@@ -33,8 +33,8 @@ func TestReadConfi(t *testing.T) {
 		t.Errorf("expected default; got %s", c.Stores[0].Name)
 	}
 
-	if c.Stores[0].Location != "/Users/nathanwehr/.npass/default-store.yaml" {
-		t.Errorf("expected /Users/nathanwehr/.npass/local-store.yaml; got %s", c.Stores[0].Location)
+	if c.Stores[0].Location != "/Users/nathanwehr/.neopass/default-store.yaml" {
+		t.Errorf("expected /Users/nathanwehr/.neopass/local-store.yaml; got %s", c.Stores[0].Location)
 	}
 
 	if c.Stores[0].Age.Recipients[0] != "age163l7rnwpa0ymrn0q0vezmlnhe85l4pvpeksenw3jfmye08ge44dq7audfa" {
@@ -51,7 +51,7 @@ func TestWriteConfig(t *testing.T) {
 			Stores: []StoreConfig{
 				{
 					Name:     "default",
-					Location: "~/.npass/store",
+					Location: "~/.neopass/store",
 				},
 			},
 		}

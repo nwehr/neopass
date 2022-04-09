@@ -1,4 +1,4 @@
-package npass
+package neopass
 
 type Entry struct {
 	Name     string `yaml:"name"`

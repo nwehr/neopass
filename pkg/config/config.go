@@ -16,9 +16,9 @@ import (
 	"filippo.io/age"
 
 	"github.com/go-piv/piv-go/piv"
-	"github.com/nwehr/npass"
-	"github.com/nwehr/npass/pkg/cli"
-	"github.com/nwehr/npass/pkg/repos"
+	"github.com/nwehr/neopass"
+	"github.com/nwehr/neopass/pkg/cli"
+	"github.com/nwehr/neopass/pkg/repos"
 	"gopkg.in/yaml.v3"
 )
 
@@ -229,7 +229,7 @@ func (c Config) GetCurrentStore() (StoreConfig, error) {
 	return StoreConfig{}, fmt.Errorf("not found")
 }
 
-func (c Config) GetCurrentRepo() (npass.EntryRepo, error) {
+func (c Config) GetCurrentRepo() (neopass.EntryRepo, error) {
 	storeConfig, _ := c.GetCurrentStore()
 
 	if storeConfig.Location[0:4] == "http" {
@@ -307,8 +307,8 @@ var (
 
 func init() {
 	if usr, err := user.Current(); err == nil {
-		DefaultConfigFile = usr.HomeDir + "/.npass/npass.yaml"
-		DefaultStoreFile = usr.HomeDir + "/.npass/default-store.yaml"
+		DefaultConfigFile = usr.HomeDir + "/.neopass/config.yaml"
+		DefaultStoreFile = usr.HomeDir + "/.neopass/default-store.yaml"
 	}
 }
 

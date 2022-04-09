@@ -1,4 +1,4 @@
-package npass
+package neopass
 
 import (
 	"fmt"

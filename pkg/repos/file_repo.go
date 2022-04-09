@@ -3,19 +3,19 @@ package repos
 import (
 	"fmt"
 
-	"github.com/nwehr/npass"
+	"github.com/nwehr/neopass"
 )
 
 type FileRepo struct {
 	Path string
 }
 
-func NewFileRepo(path string) (npass.EntryRepo, error) {
+func NewFileRepo(path string) (neopass.EntryRepo, error) {
 	return FileRepo{Path: path}, nil
 }
 
-func (r FileRepo) AddEntry(entry npass.Entry) error {
-	store := npass.Store{}
+func (r FileRepo) AddEntry(entry neopass.Entry) error {
+	store := neopass.Store{}
 	if err := store.ReadFile(r.Path); err != nil {
 		return fmt.Errorf("could not load store: %w", err)
 	}
@@ -30,7 +30,7 @@ func (r FileRepo) AddEntry(entry npass.Entry) error {
 }
 
 func (r FileRepo) RemoveEntryByName(name string) error {
-	store := npass.Store{}
+	store := neopass.Store{}
 	if err := store.ReadFile(r.Path); err != nil {
 		return fmt.Errorf("could not load store: %w", err)
 	}
@@ -50,10 +50,10 @@ func (r FileRepo) RemoveEntryByName(name string) error {
 	return nil
 }
 
-func (r FileRepo) GetEntryByName(name string) (npass.Entry, error) {
-	store := npass.Store{}
+func (r FileRepo) GetEntryByName(name string) (neopass.Entry, error) {
+	store := neopass.Store{}
 	if err := store.ReadFile(r.Path); err != nil {
-		return npass.Entry{}, fmt.Errorf("could not load store: %w", err)
+		return neopass.Entry{}, fmt.Errorf("could not load store: %w", err)
 	}
 
 	for _, entry := range store.Entries {
@@ -62,11 +62,11 @@ func (r FileRepo) GetEntryByName(name string) (npass.Entry, error) {
 		}
 	}
 
-	return npass.Entry{}, fmt.Errorf("not found")
+	return neopass.Entry{}, fmt.Errorf("not found")
 }
 
 func (r FileRepo) ListEntryNames() ([]string, error) {
-	store := npass.Store{}
+	store := neopass.Store{}
 	if err := store.ReadFile(r.Path); err != nil {
 		return nil, fmt.Errorf("could not load store: %w", err)
 	}

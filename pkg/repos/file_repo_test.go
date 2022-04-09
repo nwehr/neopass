@@ -3,17 +3,17 @@ package repos
 import (
 	"testing"
 
-	"github.com/nwehr/npass"
+	"github.com/nwehr/neopass"
 )
 
 func TestAddEntry(t *testing.T) {
 	r := FileRepo{Path: "../store.yaml"}
 
 	{
-		if err := r.AddEntry(npass.Entry{Name: "example.com", Password: "abc123"}); err != nil {
+		if err := r.AddEntry(neopass.Entry{Name: "example.com", Password: "abc123"}); err != nil {
 			t.Error(err)
 		}
-		if err := r.AddEntry(npass.Entry{Name: "example.net", Password: "123abc"}); err != nil {
+		if err := r.AddEntry(neopass.Entry{Name: "example.net", Password: "123abc"}); err != nil {
 			t.Error(err)
 		}
 	}

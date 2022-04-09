@@ -5,18 +5,18 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/nwehr/npass"
+	"github.com/nwehr/neopass"
 )
 
 type httpRepo struct {
 	BaseURL string
 }
 
-func NewHTTPRepo(baseURL string) (npass.EntryRepo, error) {
+func NewHTTPRepo(baseURL string) (neopass.EntryRepo, error) {
 	return httpRepo{BaseURL: baseURL}, nil
 }
 
-func (r httpRepo) AddEntry(entry npass.Entry) error {
+func (r httpRepo) AddEntry(entry neopass.Entry) error {
 	encoded, err := json.Marshal(entry)
 	if err != nil {
 		return err
@@ -49,8 +49,8 @@ func (r httpRepo) RemoveEntryByName(name string) error {
 	return nil
 }
 
-func (r httpRepo) GetEntryByName(name string) (npass.Entry, error) {
-	entry := npass.Entry{}
+func (r httpRepo) GetEntryByName(name string) (neopass.Entry, error) {
+	entry := neopass.Entry{}
 
 	req, err := http.NewRequest("GET", r.BaseURL+"&name="+name, nil)
 	if err != nil {

@@ -7,16 +7,16 @@ import (
 	"strings"
 
 	"github.com/atotto/clipboard"
-	"github.com/nwehr/npass"
+	"github.com/nwehr/neopass"
 
-	"github.com/nwehr/npass/cmd/client/cmd/add"
-	"github.com/nwehr/npass/cmd/client/cmd/gen"
-	"github.com/nwehr/npass/cmd/client/cmd/initstore"
-	"github.com/nwehr/npass/cmd/client/cmd/ls"
-	"github.com/nwehr/npass/cmd/client/cmd/rm"
-	"github.com/nwehr/npass/pkg/config"
-	enc "github.com/nwehr/npass/pkg/encryption/age"
-	"github.com/nwehr/npass/pkg/repos"
+	"github.com/nwehr/neopass/cmd/client/cmd/add"
+	"github.com/nwehr/neopass/cmd/client/cmd/gen"
+	"github.com/nwehr/neopass/cmd/client/cmd/initstore"
+	"github.com/nwehr/neopass/cmd/client/cmd/ls"
+	"github.com/nwehr/neopass/cmd/client/cmd/rm"
+	"github.com/nwehr/neopass/pkg/config"
+	enc "github.com/nwehr/neopass/pkg/encryption/age"
+	"github.com/nwehr/neopass/pkg/repos"
 )
 
 func getConfig() (config.Config, error) {
@@ -55,7 +55,7 @@ func main() {
 
 	case "help":
 		fmt.Println("Usage")
-		fmt.Println("  npass [<command> <name>] | [<name>]")
+		fmt.Println("  neopass [<command> <name>] | [<name>]")
 		fmt.Println()
 		fmt.Println("  Commands")
 		fmt.Println("    init [--piv [slot]]  Setup initial store optionaly protected with a security card")
@@ -67,10 +67,10 @@ func main() {
 		fmt.Println()
 		fmt.Println("  Examples")
 		fmt.Println("     Add a new entry for github.com")
-		fmt.Println("         npass add github.com")
+		fmt.Println("         neopass add github.com")
 		fmt.Println()
 		fmt.Println("     Switch to a password store named default")
-		fmt.Println("         npass store default")
+		fmt.Println("         neopass store default")
 
 	case "import":
 		c, err := getConfig()
@@ -109,7 +109,7 @@ func main() {
 				Fatalf("could not encrypt password: %v\n", err)
 			}
 
-			entry := npass.Entry{
+			entry := neopass.Entry{
 				Name:     name,
 				Password: encrypted,
 			}

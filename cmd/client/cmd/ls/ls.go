@@ -3,7 +3,7 @@ package ls
 import (
 	"fmt"
 
-	"github.com/nwehr/npass/pkg/config"
+	"github.com/nwehr/neopass/pkg/config"
 )
 
 func RunLs(opts config.ConfigOptions) error {

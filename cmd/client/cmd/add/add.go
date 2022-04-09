@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/nwehr/npass"
-	"github.com/nwehr/npass/pkg/config"
-	enc "github.com/nwehr/npass/pkg/encryption/age"
+	"github.com/nwehr/neopass"
+	"github.com/nwehr/neopass/pkg/config"
+	enc "github.com/nwehr/neopass/pkg/encryption/age"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -50,7 +50,7 @@ func RunAdd(opts AddOptions) error {
 		return fmt.Errorf("could not encrypt password: %v\n", err)
 	}
 
-	entry := npass.Entry{
+	entry := neopass.Entry{
 		Name:     opts.What,
 		Password: encrypted,
 	}

@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/google/uuid"
-	"github.com/nwehr/npass/pkg/config"
+	"github.com/nwehr/neopass/pkg/config"
 )
 
 type InitOptions struct {
