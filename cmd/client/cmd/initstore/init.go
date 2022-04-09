@@ -13,6 +13,8 @@ type InitOptions struct {
 	PIVSlot string
 
 	NeopassDotCloud bool
+
+	Name string
 }
 
 func GetInitOptions(args []string) (InitOptions, error) {
@@ -25,6 +27,9 @@ func GetInitOptions(args []string) (InitOptions, error) {
 			opts.PIVSlot = getArgValue(args, i)
 		case "--neopass.cloud":
 			opts.NeopassDotCloud = true
+
+		case "--name":
+			opts.Name = args[i+1]
 		}
 	}
 
@@ -75,11 +80,21 @@ func RunInit(opts InitOptions) error {
 
 	if opts.NeopassDotCloud {
 		storeConfig.Name = "neopass.cloud"
-		storeConfig.Location = "https://sjcoom7kak.execute-api.us-east-1.amazonaws.com/staging?client_uuid=" + uuid.New().String()
+		storeConfig.Location = "https://neopass.cloud?client_uuid=" + uuid.New().String()
 	}
 
 	c := config.Config{}
 	c.ReadFile(config.DefaultConfigFile)
+
+	if opts.Name != "" {
+		storeConfig.Name = opts.Name
+	}
+
+	for _, store := range c.Stores {
+		if store.Name == storeConfig.Name {
+			return fmt.Errorf("%s already exists", store.Name)
+		}
+	}
 
 	c.Stores = append(c.Stores, storeConfig)
 	c.CurrentStore = storeConfig.Name

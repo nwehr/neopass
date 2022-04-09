@@ -19,12 +19,10 @@ import (
 	"github.com/nwehr/neopass/pkg/repos"
 )
 
-func getConfig() (config.Config, error) {
-	c := config.Config{}
-	err := c.ReadFile(config.DefaultConfigFile)
-
-	return c, err
-}
+var (
+	Version string
+	Built   string
+)
 
 func main() {
 	if len(os.Args) == 1 {
@@ -72,13 +70,16 @@ func main() {
 		fmt.Println("     Switch to a password store named default")
 		fmt.Println("         neopass store default")
 
+	case "version":
+		fmt.Printf("{\"version\":\"%s\", \"built\":\"%s\"}", Version, Built)
+
 	case "import":
-		c, err := getConfig()
+		opts, err := config.GetConfigOptions(os.Args)
 		if err != nil {
 			Fatalf("could not load config: %v\n", err)
 		}
 
-		store, err := c.GetCurrentStore()
+		store, err := opts.Config.GetCurrentStore()
 		if err != nil {
 			Fatalf("could not get current store: %v\n", err)
 		}
