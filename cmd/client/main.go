@@ -51,19 +51,25 @@ func main() {
 			Fatalf("%v\n", err)
 		}
 
+	case "-h":
+		fallthrough
+	case "--help":
+		fallthrough
 	case "help":
 		fmt.Println("Usage")
 		fmt.Println("  neopass [<command> <name>] | [<name>]")
 		fmt.Println()
 		fmt.Println("  Commands")
-		fmt.Println("    init [--piv [slot]]  Setup initial store optionaly protected with a security card")
+		fmt.Println("    init [--piv [slot]] [--neopass.cloud]  Initialize store")
 		fmt.Println("    add   name           Add entry identified by name")
 		fmt.Println("    gen   name           Generate new entry identified by name")
 		fmt.Println("    rm    name           Remove entry identified by name")
-		fmt.Println("    store name           Switch to store identified by name or list stores")
-		fmt.Println("    import  <file>       Import a csv file of entries")
+		fmt.Println("    store [name]         Switch to store identified by name or list stores")
 		fmt.Println()
 		fmt.Println("  Examples")
+		fmt.Println("     Initialize new password store on neopass cloud")
+		fmt.Println("         neopass init --piv --neopass.cloud")
+		fmt.Println()
 		fmt.Println("     Add a new entry for github.com")
 		fmt.Println("         neopass add github.com")
 		fmt.Println()
