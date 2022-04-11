@@ -1,41 +1,48 @@
-## npass
+## neopass
 
-`npass` (NeoPass) is a password manager inspired by [pass](https://www.passwordstore.org) but is a little simpler and designed to work with pipes. For example, you can fuzzy find your passwords on the console by using `fzf`.
+`neopass` is a password manager inspired by [pass](https://www.passwordstore.org) but is a little simpler and designed to work with pipes. For example, you can fuzzy find your passwords on the console by using `fzf`.
 
 ```
-$ npass | fzf | npass
+$ neopass | fzf | neopass
 ```
 
-All passwords are encrypted using [age-encryption.org/v1](https://github.com/FiloSottile/age) and by default are stored in `~/.npass/default-store.yaml`. Passwords are never displayed on the console and therefore should never be leaked into your command history or a log file.
+All passwords are encrypted using [age-encryption.org/v1](https://github.com/FiloSottile/age) and by default are stored in `~/.neopass/default-store.yaml`. Passwords are never displayed on the console and therefore should never be leaked into your command history or a log file.
 
 ## Install
 
 ```
-$ go get -u github.com/nwehr/npass
+$ brew tap nwehr/tap
+$ brew install neopass
 ```
 
-## Initilize an Configure
+## Initilize 
 
 Initialize the default store.
 
 ```
-$ npass -i
+$ neopass init
 password:
 ```
 
 If you have a security card (i.e. Yubikey) you can pass `--piv [slot]` during initilization. 
 
 ```
-$ npass -i --piv
+$ neopass init --piv
 ```
 
-You an also share passwords by adding public keys to the list of recipients in the config file `~/.npass/npass.yaml`.
+You can also use Neopass Cloud to store your passwords. Neopass Cloud will never store your keys; only encrypted passwords.
+
+```
+$ neopass init --neopass.cloud
+```
+
+You an also share passwords by adding public keys to the list of recipients in the config file `~/.neopass/config.yaml`.
 
 ```
 currentStore: default
 stores:
     - name: default
-        location: /Users/nathanwehr/.npass/default-store.yaml
+        location: /Users/nathanwehr/.neopass/default-store.yaml
         age:
         identity: HSO*7Z:FtO`>'Yo@I.[b89"OA%rZ"clnO#IW81$5in9T+0o<(u%)^*...
         piv:
@@ -51,28 +58,28 @@ stores:
 Add a new password.
 
 ```
-$ npass -a example.com
+$ neopass add example.com
 password: 
 ```
 
 Generate a new password.
 
 ```
-$ npass -g example.com
+$ neopass gen example.com
 copied to clipboard
 ```
 
 Retrieve a password.
 
 ```
-$ npass github.com
+$ neopass github.com
 copied to clipboard
 ```
 
 List existing passwords.
 
 ```
-$ npass
+$ neopass
 github.com
 digitalocean.com
 gitlab.com
@@ -85,5 +92,5 @@ bitpay.com
 Remove a password.
 
 ```
-$ npass -r example.com
+$ neopass rm example.com
 ```
