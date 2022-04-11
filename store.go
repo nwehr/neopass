@@ -14,13 +14,12 @@ type Store struct {
 
 func (s *Store) ReadFile(filename string) error {
 	file, err := os.Open(filename)
-	if err != nil {
-		return fmt.Errorf("could not open file: %w", err)
+	if err == nil {
+		defer file.Close()
 	}
 
-	defer file.Close()
-
-	return s.Read(file)
+	s.Read(file)
+	return nil
 }
 
 func (s *Store) Read(r io.Reader) error {
