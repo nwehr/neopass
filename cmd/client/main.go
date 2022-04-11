@@ -16,12 +16,10 @@ import (
 	"github.com/nwehr/neopass/cmd/client/cmd/rm"
 	"github.com/nwehr/neopass/pkg/config"
 	enc "github.com/nwehr/neopass/pkg/encryption/age"
-	"github.com/nwehr/neopass/pkg/repos"
 )
 
 var (
 	Version string
-	Built   string
 )
 
 func main() {
@@ -60,11 +58,11 @@ func main() {
 		fmt.Println("  neopass [<command> <name>] | [<name>]")
 		fmt.Println()
 		fmt.Println("  Commands")
-		fmt.Println("    init [--piv [slot]] [--neopass.cloud]  Initialize store")
-		fmt.Println("    add   name           Add entry identified by name")
-		fmt.Println("    gen   name           Generate new entry identified by name")
-		fmt.Println("    rm    name           Remove entry identified by name")
-		fmt.Println("    store [name]         Switch to store identified by name or list stores")
+		fmt.Println("    init [--piv [<slot>]] [--neopass.cloud]  Initialize store")
+		fmt.Println("    add   <name>           Add entry identified by name")
+		fmt.Println("    gen   <name>           Generate new entry identified by name")
+		fmt.Println("    rm    <name>           Remove entry identified by name")
+		fmt.Println("    store [<store name>]   Switch to store identified by name or list stores")
 		fmt.Println()
 		fmt.Println("  Examples")
 		fmt.Println("     Initialize new password store on neopass cloud")
@@ -73,11 +71,14 @@ func main() {
 		fmt.Println("     Add a new entry for github.com")
 		fmt.Println("         neopass add github.com")
 		fmt.Println()
+		fmt.Println("     Get password for github.com")
+		fmt.Println("         neopass github.com")
+		fmt.Println()
 		fmt.Println("     Switch to a password store named default")
 		fmt.Println("         neopass store default")
 
 	case "version":
-		fmt.Printf("{\"version\":\"%s\", \"built\":\"%s\"}", Version, Built)
+		fmt.Println(Version)
 
 	case "import":
 		opts, err := config.GetConfigOptions(os.Args)
@@ -90,7 +91,10 @@ func main() {
 			Fatalf("could not get current store: %v\n", err)
 		}
 
-		r := repos.FileRepo{Path: store.Location}
+		r, err := opts.Config.GetCurrentRepo()
+		if err != nil {
+			Fatalf("could not get current repo: %v\n", err)
+		}
 
 		file, err := os.Open(os.Args[2])
 		if err != nil {
@@ -186,6 +190,9 @@ func main() {
 		}
 
 		r, err := opts.Config.GetCurrentRepo()
+		if err != nil {
+			Fatalf("could not get current repo: %v\n", err)
+		}
 
 		entry, err := r.GetEntryByName(os.Args[1])
 		if err != nil {
