@@ -307,8 +307,18 @@ var (
 
 func init() {
 	if usr, err := user.Current(); err == nil {
-		DefaultConfigFile = usr.HomeDir + "/.neopass/config.yaml"
-		DefaultStoreFile = usr.HomeDir + "/.neopass/default-store.yaml"
+		dir := usr.HomeDir + "/.neopass"
+
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			err = os.Mkdir(dir, 0700)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+
+		DefaultConfigFile = dir + "/config.yaml"
+		DefaultStoreFile = dir + "/default-store.yaml"
 	}
 }
 
