@@ -7,8 +7,15 @@ Neopass Cloud is a serverless password store. Passwords are only encrypted/decry
 
 ## Install
 
+### Linux
+
+This does not current run on linux. 
+
+### MacOS
+
 ```
-$ brew install nwehr/tap/neopass
+$ brew tap nwehr/tap
+$ brew install neopass
 ```
 
 If you have `fzf` installed you can create an alias for fuzzy finding passwords.
@@ -16,7 +23,6 @@ If you have `fzf` installed you can create an alias for fuzzy finding passwords.
 ```
 alias fzp="neopass $(neopass | fzf)"
 ```
-
 
 ## Initilize 
 
