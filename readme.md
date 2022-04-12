@@ -1,6 +1,9 @@
 ## neopass
 
-`neopass` is a password manager inspired by [pass](https://www.passwordstore.org). All passwords are encrypted using [age-encryption.org/v1](https://github.com/FiloSottile/age) and by default are stored in `~/.neopass/default-store.yaml`. Passwords are never displayed on the console and therefore should never be leaked into your command history or a log file.
+`neopass` is a simple password manager that uses [age-encryption.org/v1](https://github.com/FiloSottile/age). By default, passwords are stored in `~/.neopass/default-store.yaml`. They are copied directly to the clipboard and never displayed in the console or in log files. 
+
+
+Neopass Cloud is a serverless password store. Passwords are only encrypted/decrypted by the client. To use Neopass Cloud pass the `--neopass.cloud` option when initializing a new password store. 
 
 ## Install
 
@@ -30,7 +33,7 @@ If you have a security card (i.e. Yubikey) you can pass `--piv [slot]` during in
 $ neopass init --piv
 ```
 
-You can also use Neopass Cloud to store your passwords. Neopass Cloud will never store your keys; only encrypted passwords.
+You can also use Neopass Cloud to store your passwords. 
 
 ```
 $ neopass init --neopass.cloud
