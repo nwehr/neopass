@@ -97,3 +97,11 @@ Remove a password.
 ```
 $ neopass rm example.com
 ```
+
+List password stores.
+
+```
+$ neopass store
+   default
+-> neopass.cloud
+```
