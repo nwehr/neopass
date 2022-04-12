@@ -2,8 +2,6 @@ module github.com/nwehr/neopass
 
 go 1.18
 
-replace golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad => ../crypto
-
 require (
 	filippo.io/age v1.0.0
 	github.com/atotto/clipboard v0.1.2
