@@ -1,7 +1,10 @@
 ## neopass
 
-`neopass` is a simple password manager that uses [age-encryption.org/v1](https://github.com/FiloSottile/age). By default, passwords are stored in `~/.neopass/default-store.yaml`. They are copied directly to the clipboard and never displayed in the console or in log files. 
+`neopass` is a simple password manager that uses [age-encryption.org/v1](https://github.com/FiloSottile/age). Passwords can either be encrypted with a master password or with a security card (i.e. Yubikey). 
 
+Passwords are copied directly to the clipboard and never displayed in the console or in log files. 
+
+### Neopass Cloud
 
 Neopass Cloud is a serverless password store. Passwords are only encrypted/decrypted by the client. To use Neopass Cloud pass the `--neopass.cloud` option when initializing a new password store. 
 
