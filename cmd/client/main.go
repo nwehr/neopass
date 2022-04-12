@@ -1,21 +1,16 @@
 package main
 
 import (
-	"encoding/csv"
 	"fmt"
 	"os"
-	"strings"
-
-	"github.com/atotto/clipboard"
-	"github.com/nwehr/neopass"
 
 	"github.com/nwehr/neopass/cmd/client/cmd/add"
 	"github.com/nwehr/neopass/cmd/client/cmd/gen"
+	"github.com/nwehr/neopass/cmd/client/cmd/get"
 	"github.com/nwehr/neopass/cmd/client/cmd/initstore"
 	"github.com/nwehr/neopass/cmd/client/cmd/ls"
 	"github.com/nwehr/neopass/cmd/client/cmd/rm"
 	"github.com/nwehr/neopass/pkg/config"
-	enc "github.com/nwehr/neopass/pkg/encryption/age"
 )
 
 var (
@@ -38,17 +33,6 @@ func main() {
 	}
 
 	switch os.Args[1] {
-	case "init":
-		opts, err := initstore.GetInitOptions(os.Args)
-		if err != nil {
-			Fatalf("could not get init options: %v\n", err)
-		}
-
-		err = initstore.RunInit(opts)
-		if err != nil {
-			Fatalf("%v\n", err)
-		}
-
 	case "-h":
 		fallthrough
 	case "--help":
@@ -59,10 +43,10 @@ func main() {
 		fmt.Println()
 		fmt.Println("  Commands")
 		fmt.Println("    init [--piv [<slot>]] [--neopass.cloud]  Initialize store")
-		fmt.Println("    add   <name>           Add entry identified by name")
-		fmt.Println("    gen   <name>           Generate new entry identified by name")
-		fmt.Println("    rm    <name>           Remove entry identified by name")
-		fmt.Println("    store [<store name>]   Switch to store identified by name or list stores")
+		fmt.Println("    add   <name>                   Add entry identified by name")
+		fmt.Println("    gen   <name>                   Generate new entry identified by name")
+		fmt.Println("    rm    <name>                   Remove entry identified by name")
+		fmt.Println("    store [--switch <store name>]  Switch to store identified by name or list stores")
 		fmt.Println()
 		fmt.Println("  Examples")
 		fmt.Println("     Initialize new password store on neopass cloud")
@@ -75,59 +59,20 @@ func main() {
 		fmt.Println("         neopass github.com")
 		fmt.Println()
 		fmt.Println("     Switch to a password store named default")
-		fmt.Println("         neopass store default")
+		fmt.Println("         neopass store --switch default")
 
 	case "version":
 		fmt.Println(Version)
 
-	case "import":
-		opts, err := config.GetConfigOptions(os.Args)
+	case "init":
+		opts, err := initstore.GetInitOptions(os.Args)
 		if err != nil {
-			Fatalf("could not load config: %v\n", err)
+			Fatalf("could not get init options: %v\n", err)
 		}
 
-		store, err := opts.Config.GetCurrentStore()
+		err = initstore.RunInit(opts)
 		if err != nil {
-			Fatalf("could not get current store: %v\n", err)
-		}
-
-		r, err := opts.Config.GetCurrentRepo()
-		if err != nil {
-			Fatalf("could not get current repo: %v\n", err)
-		}
-
-		file, err := os.Open(os.Args[2])
-		if err != nil {
-			Fatalf("could not open csv file: %v\n", err)
-		}
-
-		rows, err := csv.NewReader(file).ReadAll()
-		if err != nil {
-			Fatalf("could not parse csv file: %v\n", err)
-		}
-
-		for _, row := range rows {
-			name := strings.TrimSpace(row[0])
-			plain := strings.TrimSpace(row[1])
-
-			enc, err := enc.NewAgeEncrypter(store.Age.Recipients)
-			if err != nil {
-				Fatalf("could not get encrypter: %v\n", err)
-			}
-
-			encrypted, err := enc.Encrypt(string(plain))
-			if err != nil {
-				Fatalf("could not encrypt password: %v\n", err)
-			}
-
-			entry := neopass.Entry{
-				Name:     name,
-				Password: encrypted,
-			}
-
-			if err := r.AddEntry(entry); err != nil {
-				Fatalf("could not add entry: %v\n", err)
-			}
+			Fatalf("%v\n", err)
 		}
 
 	case "add":
@@ -169,6 +114,22 @@ func main() {
 			Fatalf("could not load config: %v\n", err)
 		}
 
+		if len(os.Args) == 3 {
+			for _, store := range opts.Config.Stores {
+				if store.Name == os.Args[2] {
+					opts.Config.CurrentStore = os.Args[2]
+					err = opts.Config.WriteFile(config.DefaultConfigFile)
+					if err != nil {
+						Fatalf(err.Error())
+
+					}
+					return
+				}
+			}
+
+			Fatalf("could not find store '%s'\n", os.Args[2])
+		}
+
 		for _, store := range opts.Config.Stores {
 			marker := "  "
 
@@ -179,50 +140,19 @@ func main() {
 			fmt.Printf("%s %s\n", marker, store.Name)
 		}
 	default:
-		opts, err := config.GetConfigOptions(os.Args)
+		opts, err := get.GetGetOptions(os.Args)
 		if err != nil {
-			Fatalf("could not load config: %v\n", err)
+			Fatalf("%v\n", err)
 		}
 
-		store, err := opts.Config.GetCurrentStore()
+		err = get.RunGet(opts)
 		if err != nil {
-			Fatalf("could not get current store: %v\n", err)
+			Fatalf("%v\n", err)
 		}
-
-		r, err := opts.Config.GetCurrentRepo()
-		if err != nil {
-			Fatalf("could not get current repo: %v\n", err)
-		}
-
-		entry, err := r.GetEntryByName(os.Args[1])
-		if err != nil {
-			Fatalf("could not find entry: %v\n", err)
-		}
-
-		identity, err := store.Age.UnlockIdentity()
-		if err != nil {
-			Fatalf("could not unlock identity: %v\n", err)
-		}
-
-		dec, err := enc.NewAgeDecrypter(identity)
-		if err != nil {
-			Fatalf("could not get decrypter: %v\n", err)
-		}
-
-		decrypted, err := dec.Decrypt(entry.Password)
-		if err != nil {
-			Fatalf("could not decrypt password: %v\n", err)
-		}
-
-		if err = clipboard.WriteAll(decrypted); err != nil {
-			Fatalf("coult not write password to clipboard: %v", err)
-		}
-
-		fmt.Println("copied to clipboard")
 	}
 }
 
-func Fatalf(format string, a ...interface{}) {
+func Fatalf(format string, a ...any) {
 	fmt.Fprintf(os.Stderr, format, a...)
 	os.Exit(1)
 }
