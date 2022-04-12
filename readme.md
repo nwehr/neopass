@@ -5,6 +5,8 @@
 
 Neopass Cloud is a serverless password store. Passwords are only encrypted/decrypted by the client. To use Neopass Cloud pass the `--neopass.cloud` option when initializing a new password store. 
 
+![](images/giphy.gif)
+
 ## Install
 
 ```
