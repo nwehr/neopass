@@ -1,23 +1,23 @@
 ## neopass
 
-`neopass` is a password manager inspired by [pass](https://www.passwordstore.org) but is a little simpler and designed to work with pipes. For example, you can fuzzy find your passwords on the console by using `fzf`.
-
-```
-$ neopass | fzf | neopass
-```
-
-All passwords are encrypted using [age-encryption.org/v1](https://github.com/FiloSottile/age) and by default are stored in `~/.neopass/default-store.yaml`. Passwords are never displayed on the console and therefore should never be leaked into your command history or a log file.
+`neopass` is a password manager inspired by [pass](https://www.passwordstore.org). All passwords are encrypted using [age-encryption.org/v1](https://github.com/FiloSottile/age) and by default are stored in `~/.neopass/default-store.yaml`. Passwords are never displayed on the console and therefore should never be leaked into your command history or a log file.
 
 ## Install
 
 ```
-$ brew tap nwehr/tap
-$ brew install neopass
+$ brew install nwehr/tap/neopass
 ```
+
+If you have `fzf` installed you can create an alias for fuzzy finding passwords.
+
+```
+alias fzp="neopass $(neopass | fzf)"
+```
+
 
 ## Initilize 
 
-Initialize the default store.
+Initialize the default store protected with a master password.
 
 ```
 $ neopass init
@@ -42,7 +42,7 @@ You an also share passwords by adding public keys to the list of recipients in t
 currentStore: default
 stores:
     - name: default
-        location: /Users/nathanwehr/.neopass/default-store.yaml
+        location: ~/.neopass/default-store.yaml
         age:
         identity: HSO*7Z:FtO`>'Yo@I.[b89"OA%rZ"clnO#IW81$5in9T+0o<(u%)^*...
         piv:
