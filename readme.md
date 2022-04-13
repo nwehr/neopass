@@ -12,7 +12,20 @@ Neopass Cloud is a serverless password store. Passwords are only encrypted/decry
 
 ### Linux
 
-This does not current run on linux. 
+To build on linux you need to install PCSC lite. On debian-based systems it is packaged as `libpcsclite-dev`.
+
+```
+$ sudo apt-get install libpcsclite-dev
+```
+
+You can then clone and build.
+
+```
+$ git clone https://github.com/nwehr/neopass.git
+$ cd neopass
+$ make
+$ cp neopass /usr/local/bin/
+```
 
 ### MacOS
 
