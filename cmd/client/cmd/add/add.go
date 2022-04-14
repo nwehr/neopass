@@ -11,8 +11,10 @@ import (
 )
 
 type AddOptions struct {
-	What          string
-	ConfigOptions config.ConfigOptions
+	What        string
+	GetPassword func() (string, error)
+	Repo        neopass.EntryRepo
+	Encrypter   enc.AgeEncrypter
 }
 
 func GetAddOptions(args []string) (AddOptions, error) {
@@ -21,31 +23,36 @@ func GetAddOptions(args []string) (AddOptions, error) {
 		return AddOptions{}, err
 	}
 
-	return AddOptions{
-		What:          args[2],
-		ConfigOptions: configOpts,
-	}, nil
-}
-
-func RunAdd(opts AddOptions) error {
-	store, err := opts.ConfigOptions.Config.GetCurrentStore()
+	store, err := configOpts.Config.GetCurrentStore()
 	if err != nil {
-		return fmt.Errorf("could not get current store: %v\n", err)
+		return AddOptions{}, err
 	}
 
-	r, _ := opts.ConfigOptions.Config.GetCurrentRepo()
-
-	plain, err := ttyPassword()
+	repo, err := configOpts.Config.GetCurrentRepo()
 	if err != nil {
-		return fmt.Errorf("could not get password: %v\n", err)
+		return AddOptions{}, err
 	}
 
 	enc, err := enc.NewAgeEncrypter(store.Age.Recipients)
 	if err != nil {
-		return fmt.Errorf("could not get encrypter: %v\n", err)
+		return AddOptions{}, err
 	}
 
-	encrypted, err := enc.Encrypt(string(plain))
+	return AddOptions{
+		What:        args[2],
+		GetPassword: ttyPassword,
+		Repo:        repo,
+		Encrypter:   enc,
+	}, nil
+}
+
+func RunAdd(opts AddOptions) error {
+	plain, err := opts.GetPassword()
+	if err != nil {
+		return fmt.Errorf("could not get password: %v\n", err)
+	}
+
+	encrypted, err := opts.Encrypter.Encrypt(plain)
 	if err != nil {
 		return fmt.Errorf("could not encrypt password: %v\n", err)
 	}
@@ -55,22 +62,23 @@ func RunAdd(opts AddOptions) error {
 		Password: encrypted,
 	}
 
-	if err := r.AddEntry(entry); err != nil {
+	if err := opts.Repo.AddEntry(entry); err != nil {
 		return fmt.Errorf("could not add entry: %v\n", err)
 	}
 	return nil
 }
 
-func ttyPassword() ([]byte, error) {
+func ttyPassword() (string, error) {
 	fmt.Print("password: ")
 
 	tty, err := os.Open("/dev/tty")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	defer tty.Close()
 	defer fmt.Println()
 
-	return terminal.ReadPassword(int(tty.Fd()))
+	password, err := terminal.ReadPassword(int(tty.Fd()))
+	return string(password), err
 }

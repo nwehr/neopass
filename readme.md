@@ -1,8 +1,12 @@
 ## neopass
 
-`neopass` is a simple password manager that uses [age-encryption.org/v1](https://github.com/FiloSottile/age). Passwords can either be encrypted with a master password or with a security card (i.e. Yubikey). 
+`neopass` is a simple cli-based password manager that uses [age-encryption.org/v1](https://github.com/FiloSottile/age). Passwords can either be encrypted with a master password or with a security card (i.e. Yubikey). 
 
 Passwords are copied directly to the clipboard and never displayed in the console or in log files. 
+
+Passwords can be securely shared between users (think database passwords or api keys). 
+
+Passwords can be in different password stores. Stores can either be local or on the cloud. 
 
 ### Neopass Cloud
 
@@ -37,7 +41,7 @@ $ brew install neopass
 If you have `fzf` installed you can create an alias for fuzzy finding passwords.
 
 ```
-alias fzp="neopass $(neopass | fzf)"
+alias fzp='neopass $(neopass | fzf)'
 ```
 
 ## Initilize 
