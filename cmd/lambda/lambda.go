@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	runtime "github.com/aws/aws-lambda-go/lambda"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -16,29 +17,55 @@ func main() {
 }
 
 func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	conn, err := pgx.Connect(ctx, os.Getenv("DATABASE_URL"))
-	if err != nil {
-		Fatalf("%v\n", err)
-	}
+	influxClient := influxdb2.NewClient(os.Getenv("INFLUX_URL"), os.Getenv("INFLUX_TOKEN"))
+	defer influxClient.Close()
 
-	defer conn.Close(ctx)
+	influx := influxClient.WriteAPI(os.Getenv("INFLUX_ORG"), "neopass")
+
+	defer func() {
+		influx.Flush()
+	}()
 
 	clientUUID, ok := request.QueryStringParameters["client_uuid"]
 	if !ok {
-		return events.APIGatewayProxyResponse{Body: "missing client_uuid", StatusCode: 400}, nil
+		influx.WriteRecord("client_err value=true")
+		return _err(400, "missing client_uuid parameter")
 	}
+
+	cockroach, err := pgx.Connect(ctx, os.Getenv("DATABASE_URL"))
+	if err != nil {
+		influx.WriteRecord(fmt.Sprintf("err,client_uuid=%s value=true", clientUUID))
+		return _err(500, "could not connect to database")
+	}
+
+	defer cockroach.Close(ctx)
 
 	switch request.HTTPMethod {
 	case "GET":
 		name, ok := request.QueryStringParameters["name"]
 
 		if ok {
-			return getEntryHandler(ctx, conn, clientUUID, name)
+			influx.WriteRecord(fmt.Sprintf("get_entry,client_uuid=%s value=true", clientUUID))
+
+			resp, err := getEntry(ctx, cockroach, clientUUID, name)
+			if err != nil {
+				influx.WriteRecord("err value=true")
+			}
+
+			return resp, err
 
 		} else {
-			return listEntryNameshandler(ctx, conn, clientUUID)
+			influx.WriteRecord(fmt.Sprintf("list_entry_names,client_uuid=%s value=true", clientUUID))
+
+			resp, err := listEntryNames(ctx, cockroach, clientUUID)
+			if err != nil {
+				influx.WriteRecord("err value=true")
+			}
+			return resp, err
 		}
 	case "POST":
+		influx.WriteRecord(fmt.Sprintf("add_entry,client_uuid=%s value=true", clientUUID))
+
 		entry := struct {
 			Name     string `json:"name"`
 			Password string `json:"password"`
@@ -46,26 +73,35 @@ func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 
 		err := json.Unmarshal([]byte(request.Body), &entry)
 		if err != nil {
-			return events.APIGatewayProxyResponse{Body: err.Error(), StatusCode: 500}, err
+			influx.WriteRecord(fmt.Sprintf("err,client_uuid=%s value=true", clientUUID))
+			return _err(500, "could not parse json request")
 		}
 
-		return addEntryHandler(ctx, conn, clientUUID, entry.Name, entry.Password)
+		resp, err := addEntry(ctx, cockroach, clientUUID, entry.Name, entry.Password)
+		if err != nil {
+			influx.WriteRecord(fmt.Sprintf("err,client_uuid=%s value=true", clientUUID))
+		}
+		return resp, err
 
 	case "DELETE":
+		influx.WriteRecord(fmt.Sprintf("delete_entry,client_uuid=%s value=true", clientUUID))
+
 		name, ok := request.QueryStringParameters["name"]
 		if ok {
-			return deleteEntryHandler(ctx, conn, clientUUID, name)
+			resp, err := deleteEntry(ctx, cockroach, clientUUID, name)
+			if err != nil {
+				influx.WriteRecord("err value=true")
+			}
+			return resp, err
 		}
 
-		return events.APIGatewayProxyResponse{Body: "missing name", StatusCode: 400}, nil
+		return _err(400, "missing name")
 	}
 
-	return events.APIGatewayProxyResponse{Body: request.Body, StatusCode: 200}, nil
+	return _err(400, "bad request")
 }
 
-func getEntryHandler(ctx context.Context, conn *pgx.Conn, clientUUID string, name string) (events.APIGatewayProxyResponse, error) {
-	fmt.Printf("getEntryHandler(%s)\n", name)
-
+func getEntry(ctx context.Context, conn *pgx.Conn, clientUUID string, name string) (events.APIGatewayProxyResponse, error) {
 	entry := struct {
 		Name     string `json:"name"`
 		Password string `json:"password"`
@@ -75,25 +111,21 @@ func getEntryHandler(ctx context.Context, conn *pgx.Conn, clientUUID string, nam
 
 	err := conn.QueryRow(ctx, `select "password" from entries where "client_uuid" = $1 and "name" = $2`, clientUUID, entry.Name).Scan(&entry.Password)
 	if err != nil {
-		fmt.Printf("getEntryHandler(%s) %v\n", name, err)
-		return events.APIGatewayProxyResponse{Body: err.Error(), StatusCode: 500}, err
+		return _err(500, "could not query entries")
 	}
 
 	encoded, err := json.Marshal(entry)
 	if err != nil {
-		fmt.Printf("getEntryHandler(%s) %v\n", name, err)
-		return events.APIGatewayProxyResponse{Body: err.Error(), StatusCode: 500}, err
+		return _err(500, "could not encode json response")
 	}
 
-	return events.APIGatewayProxyResponse{Body: string(encoded), StatusCode: 200}, nil
+	return _ok(string(encoded))
 }
 
-func listEntryNameshandler(ctx context.Context, conn *pgx.Conn, clientUUID string) (events.APIGatewayProxyResponse, error) {
-	fmt.Printf("listEntryNameshandler(%s)\n", clientUUID)
-
+func listEntryNames(ctx context.Context, conn *pgx.Conn, clientUUID string) (events.APIGatewayProxyResponse, error) {
 	rows, err := conn.Query(ctx, `select "name" from entries where "client_uuid" = $1`, clientUUID)
 	if err != nil {
-		return events.APIGatewayProxyResponse{Body: err.Error(), StatusCode: 500}, err
+		return _err(500, "could not query entries")
 	}
 
 	defer rows.Close()
@@ -105,41 +137,42 @@ func listEntryNameshandler(ctx context.Context, conn *pgx.Conn, clientUUID strin
 
 		err = rows.Scan(&name)
 		if err != nil {
-			return events.APIGatewayProxyResponse{Body: err.Error(), StatusCode: 500}, err
+			return _err(500, "could not scan entry names")
 		}
 
 		names = append(names, name)
 	}
 
-	fmt.Printf("listEntryNameshandler(%s) %d results\n", clientUUID, len(names))
-
 	encoded, err := json.Marshal(names)
 	if err != nil {
-		return events.APIGatewayProxyResponse{Body: err.Error(), StatusCode: 500}, err
+		return _err(500, "could not encode json response")
 	}
 
-	return events.APIGatewayProxyResponse{Body: string(encoded), StatusCode: 200}, nil
+	return _ok(string(encoded))
 }
 
-func addEntryHandler(ctx context.Context, conn *pgx.Conn, clientUUID string, name string, password string) (events.APIGatewayProxyResponse, error) {
+func addEntry(ctx context.Context, conn *pgx.Conn, clientUUID string, name string, password string) (events.APIGatewayProxyResponse, error) {
 	_, err := conn.Exec(ctx, `insert into entries ("client_uuid", "name", "password") values ($1, $2, $3)`, clientUUID, name, password)
 	if err != nil {
-		return events.APIGatewayProxyResponse{Body: err.Error(), StatusCode: 500}, err
+		return _err(500, "could not insert into entries")
 	}
 
-	return events.APIGatewayProxyResponse{StatusCode: 200}, nil
+	return _ok("")
 }
 
-func deleteEntryHandler(ctx context.Context, conn *pgx.Conn, clientUUID string, name string) (events.APIGatewayProxyResponse, error) {
+func deleteEntry(ctx context.Context, conn *pgx.Conn, clientUUID string, name string) (events.APIGatewayProxyResponse, error) {
 	_, err := conn.Exec(ctx, `delete from entries where "client_uuid" = $1 and "name" = $2`, clientUUID, name)
 	if err != nil {
-		return events.APIGatewayProxyResponse{Body: err.Error(), StatusCode: 500}, err
+		return _err(500, "could not delete from entries")
 	}
 
-	return events.APIGatewayProxyResponse{StatusCode: 200}, err
+	return _ok("")
 }
 
-func Fatalf(format string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, a...)
-	os.Exit(1)
+func _err(code int, err string) (events.APIGatewayProxyResponse, error) {
+	return events.APIGatewayProxyResponse{Body: err, StatusCode: code}, fmt.Errorf(err)
+}
+
+func _ok(body string) (events.APIGatewayProxyResponse, error) {
+	return events.APIGatewayProxyResponse{Body: body, StatusCode: 200}, nil
 }
