@@ -1,8 +1,10 @@
-tag = $(shell git tag --sort=committerdate | tail -1)
-flags = -ldflags "-X main.Version=$(tag)"
+COMMIT = $(shell git rev-parse --short=8 HEAD)
+BUILD_DATE := $(shell date '+%Y-%m-%d %H:%M:%S')
+FLAGS = -ldflags "-X 'main.commit=${COMMIT}' -X 'main.buildDate=${BUILD_DATE}'"
+TARGET = neopass
 
 all:
-	go build $(flags) -o neopass cmd/client/main.go
+	go build $(FLAGS) -o $(TARGET) cmd/client/main.go
 
 lambda:
 	GOOS=linux GOARCH=amd64 go build -o main cmd/lambda/lambda.go

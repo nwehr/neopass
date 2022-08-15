@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	Version string
+	commit    string
+	buildDate string
 )
 
 func main() {
@@ -62,7 +63,7 @@ func main() {
 		fmt.Println("         neopass store --switch default")
 
 	case "version":
-		fmt.Println(Version)
+		fmt.Printf("neopass version %s built %s\n", commit, buildDate)
 
 	case "init":
 		opts, err := initstore.GetInitOptions(os.Args)
