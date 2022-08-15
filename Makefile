@@ -6,9 +6,12 @@ TARGET = neopass
 all:
 	go build $(FLAGS) -o $(TARGET) cmd/client/main.go
 
+server:
+	CGO_ENABLED=0 go build $(FLAGS) -o server cmd/server/main.go
+
 lambda:
 	GOOS=linux GOARCH=amd64 go build -o main cmd/lambda/lambda.go
 	zip functions.zip main
 
 clean:
-	rm neopass
+	rm -f neopass main functions.zip

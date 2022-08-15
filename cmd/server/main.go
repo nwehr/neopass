@@ -12,6 +12,11 @@ import (
 	"github.com/nwehr/neopass"
 )
 
+var (
+	commit    string
+	buildDate string
+)
+
 func main() {
 	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
@@ -95,6 +100,7 @@ func deleteEntryHandler(conn *pgx.Conn) http.HandlerFunc {
 		conn.Exec(context.Background(), `delete from entries where "client_uuid" = $1 and "name" = $2`, clientUUID, name)
 	}
 }
+
 func Fatalf(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, a...)
 	os.Exit(1)

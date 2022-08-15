@@ -1,0 +1,22 @@
+services:
+  server:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      - DATABASE_URL=postgres://postgres:EQu3Uish@postgres:5432/neopass
+
+  postgres:
+    image: postgres:14
+    environment: 
+      - POSTGRES_PASSWORD=EQu3Uish
+      - POSTGRES_DB=neopass
+    volumes:
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata: {}
+
