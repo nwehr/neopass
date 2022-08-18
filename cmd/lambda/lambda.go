@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/aws/aws-lambda-go/events"
 	runtime "github.com/aws/aws-lambda-go/lambda"
@@ -42,12 +43,26 @@ func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 
 	switch request.HTTPMethod {
 	case "GET":
-		name, ok := request.QueryStringParameters["name"]
+		name, nameOk := request.QueryStringParameters["name"]
 
-		if ok {
+		if nameOk {
 			influx.WriteRecord(fmt.Sprintf("get_entry,client_uuid=%s value=true", clientUUID))
 
-			resp, err := getEntry(ctx, cockroach, clientUUID, name)
+			// Get specific revision
+			rev, revOk := request.QueryStringParameters["rev"]
+			if revOk {
+				revInt, _ := strconv.Atoi(rev)
+
+				resp, err := getSpecificRevision(ctx, cockroach, clientUUID, name, revInt)
+				if err != nil {
+					influx.WriteRecord("err value=true")
+				}
+
+				return resp, err
+			}
+
+			// Get current revision
+			resp, err := getCurrentRevision(ctx, cockroach, clientUUID, name)
 			if err != nil {
 				influx.WriteRecord("err value=true")
 			}
@@ -101,7 +116,28 @@ func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 	return _err(400, "bad request")
 }
 
-func getEntry(ctx context.Context, conn *pgx.Conn, clientUUID string, name string) (events.APIGatewayProxyResponse, error) {
+func getSpecificRevision(ctx context.Context, conn *pgx.Conn, clientUUID string, name string, revision int) (events.APIGatewayProxyResponse, error) {
+	entry := struct {
+		Name     string `json:"name"`
+		Password string `json:"password"`
+	}{
+		Name: name,
+	}
+
+	err := conn.QueryRow(ctx, `select revisions[$3] as "password" from entries where "client_uuid" = $1 and "name" = $2`, clientUUID, entry.Name, revision).Scan(&entry.Password)
+	if err != nil {
+		return _err(500, "could not query entries")
+	}
+
+	encoded, err := json.Marshal(entry)
+	if err != nil {
+		return _err(500, "could not encode json response")
+	}
+
+	return _ok(string(encoded))
+}
+
+func getCurrentRevision(ctx context.Context, conn *pgx.Conn, clientUUID string, name string) (events.APIGatewayProxyResponse, error) {
 	entry := struct {
 		Name     string `json:"name"`
 		Password string `json:"password"`

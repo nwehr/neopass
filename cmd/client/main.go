@@ -138,7 +138,6 @@ func showUsage() {
 	fmt.Println("  get   <name>    Get entry identified by name")
 	fmt.Println("  gen   <name>    Generate entry identified by name")
 	fmt.Println("  rm    <name>    Remove entry identified by name")
-	fmt.Println()
 	fmt.Println("  init [--piv [<slot>]] [--neopass.cloud]  Initialize store")
 	fmt.Println("  store [--switch <store name>]            Switch to store identified by name or list stores")
 	fmt.Println()
@@ -157,6 +156,10 @@ func showUsage() {
 	fmt.Println()
 	fmt.Println("   Switch to a password store named default")
 	fmt.Println("       neopass store --switch default")
+	fmt.Println()
+	fmt.Println("Donate")
+	fmt.Println("   Ravencoin (RVN): RSm7jfUjynsVptGyEDaW5yShiXbKBPsHNm")
+
 }
 
 func Fatalf(format string, a ...any) {
