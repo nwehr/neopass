@@ -1,6 +1,6 @@
 COMMIT = $(shell git rev-parse --short=8 HEAD)
 BUILD_DATE := $(shell date '+%Y-%m-%d %H:%M:%S')
-FLAGS = -ldflags "-X 'main.commit=${COMMIT}' -X 'main.buildDate=${BUILD_DATE}'"
+FLAGS = -ldflags "-X 'main.version=${COMMIT}'"
 TARGET = neopass
 
 all:
