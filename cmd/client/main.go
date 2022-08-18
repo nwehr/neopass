@@ -44,8 +44,8 @@ func main() {
 		fmt.Println()
 		fmt.Println("  Commands")
 		fmt.Println("    init [--piv [<slot>]] [--neopass.cloud]  Initialize store")
-		fmt.Println("    add   <name>                   Add entry identified by name")
-		fmt.Println("    gen   <name>                   Generate new entry identified by name")
+		fmt.Println("    set   <name>                   Set entry identified by name")
+		fmt.Println("    gen   <name>                   Generate entry identified by name")
 		fmt.Println("    rm    <name>                   Remove entry identified by name")
 		fmt.Println("    store [--switch <store name>]  Switch to store identified by name or list stores")
 		fmt.Println()
@@ -53,8 +53,8 @@ func main() {
 		fmt.Println("     Initialize new password store on neopass cloud")
 		fmt.Println("         neopass init --piv --neopass.cloud")
 		fmt.Println()
-		fmt.Println("     Add a new entry for github.com")
-		fmt.Println("         neopass add github.com")
+		fmt.Println("     Set an entry for github.com")
+		fmt.Println("         neopass set github.com")
 		fmt.Println()
 		fmt.Println("     Get password for github.com")
 		fmt.Println("         neopass github.com")
@@ -76,7 +76,7 @@ func main() {
 			Fatalf("%v\n", err)
 		}
 
-	case "add":
+	case "set":
 		opts, err := add.GetAddOptions(os.Args)
 		if err != nil {
 			Fatalf("%v\n", err)

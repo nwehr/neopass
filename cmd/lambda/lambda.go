@@ -64,7 +64,7 @@ func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 			return resp, err
 		}
 	case "POST":
-		influx.WriteRecord(fmt.Sprintf("add_entry,client_uuid=%s value=true", clientUUID))
+		influx.WriteRecord(fmt.Sprintf("set_entry,client_uuid=%s value=true", clientUUID))
 
 		entry := struct {
 			Name     string `json:"name"`
@@ -77,7 +77,7 @@ func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 			return _err(500, "could not parse json request")
 		}
 
-		resp, err := addEntry(ctx, cockroach, clientUUID, entry.Name, entry.Password)
+		resp, err := setEntry(ctx, cockroach, clientUUID, entry.Name, entry.Password)
 		if err != nil {
 			influx.WriteRecord(fmt.Sprintf("err,client_uuid=%s value=true", clientUUID))
 		}
@@ -109,7 +109,7 @@ func getEntry(ctx context.Context, conn *pgx.Conn, clientUUID string, name strin
 		Name: name,
 	}
 
-	err := conn.QueryRow(ctx, `select "password" from entries where "client_uuid" = $1 and "name" = $2`, clientUUID, entry.Name).Scan(&entry.Password)
+	err := conn.QueryRow(ctx, `select revisions[current_revision] as "password" from entries where "client_uuid" = $1 and "name" = $2`, clientUUID, entry.Name).Scan(&entry.Password)
 	if err != nil {
 		return _err(500, "could not query entries")
 	}
@@ -151,8 +151,26 @@ func listEntryNames(ctx context.Context, conn *pgx.Conn, clientUUID string) (eve
 	return _ok(string(encoded))
 }
 
-func addEntry(ctx context.Context, conn *pgx.Conn, clientUUID string, name string, password string) (events.APIGatewayProxyResponse, error) {
-	_, err := conn.Exec(ctx, `insert into entries ("client_uuid", "name", "password") values ($1, $2, $3)`, clientUUID, name, password)
+func setEntry(ctx context.Context, conn *pgx.Conn, clientUUID string, name string, password string) (events.APIGatewayProxyResponse, error) {
+	q := `insert into "entries" (
+		"client_uuid"
+		, "name"
+		, "revisions"
+		, "current_revision"
+	) 
+	values (
+		$1
+		, $2
+		, array[$3]
+		, 1
+	) 
+	on conflict on constraint client_uuid_name_unique do 
+		update set 
+			revisions = array_append(entries.revisions, $3)
+			, current_revision = entries.current_revision + 1
+	`
+
+	_, err := conn.Exec(ctx, q, clientUUID, name, password)
 	if err != nil {
 		return _err(500, "could not insert into entries")
 	}
