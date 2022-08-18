@@ -41,7 +41,7 @@ $ brew install neopass
 If you have `fzf` installed you can create an alias for fuzzy finding passwords.
 
 ```
-alias fzp='neopass $(neopass | fzf)'
+alias fzp='neopass get $(neopass list | fzf)'
 ```
 
 ## Initilize 
@@ -91,7 +91,7 @@ stores:
 Add a new password.
 
 ```
-$ neopass add example.com
+$ neopass set example.com
 password: 
 ```
 
@@ -105,14 +105,14 @@ copied to clipboard
 Retrieve a password.
 
 ```
-$ neopass github.com
+$ neopass get github.com
 copied to clipboard
 ```
 
 List existing passwords.
 
 ```
-$ neopass
+$ neopass list
 github.com
 digitalocean.com
 gitlab.com
