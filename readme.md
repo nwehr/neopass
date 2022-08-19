@@ -1,4 +1,4 @@
-## neopass
+# neopass
 
 `neopass` is a simple cli-based password manager that uses [age-encryption.org/v1](https://github.com/FiloSottile/age). Passwords can either be encrypted with a master password or with a security card (i.e. Yubikey). 
 
@@ -12,14 +12,21 @@ Passwords can be in different password stores. Stores can either be local or on 
 
 Neopass Cloud is a serverless password store. Passwords are only encrypted/decrypted by the client. To use Neopass Cloud pass the `--neopass.cloud` option when initializing a new password store. 
 
-## Install
+# Install
+
+### MacOS
+
+```
+$ brew tap nwehr/tap
+$ brew install neopass
+```
 
 ### Linux
 
 To build on linux you need to install PCSC lite. On debian-based systems it is packaged as `libpcsclite-dev`.
 
 ```
-$ sudo apt-get install libpcsclite-dev
+$ apt install libpcsclite-dev
 ```
 
 You can then clone and build.
@@ -30,21 +37,7 @@ $ cd neopass
 $ make
 $ cp neopass /usr/local/bin/
 ```
-
-### MacOS
-
-```
-$ brew tap nwehr/tap
-$ brew install neopass
-```
-
-If you have `fzf` installed you can create an alias for fuzzy finding passwords.
-
-```
-alias fzp='neopass get $(neopass list | fzf)'
-```
-
-## Initilize 
+# Setup 
 
 Initialize the default store protected with a master password.
 
@@ -65,33 +58,16 @@ You can also use Neopass Cloud to store your passwords.
 $ neopass init --neopass.cloud
 ```
 
-You an also share passwords by adding public keys to the list of recipients in the config file `~/.neopass/config.yaml`.
+# Passwords
 
-```
-currentStore: default
-stores:
-    - name: default
-        location: ~/.neopass/default-store.yaml
-        age:
-        identity: HSO*7Z:FtO`>'Yo@I.[b89"OA%rZ"clnO#IW81$5in9T+0o<(u%)^*...
-        piv:
-            slot: 158
-        recipients:
-            - age1t0v09up9uxslugrqee5kmd5vk85ltekw9xzkchsdpnt78qzp4f0sjl3dz6
-            - age1n3c66l076m00ffu2pj84ttcq5x2hy6s7yehngg33qgmgttaqf4tsce5c9q
-            - age19grrxqmr0ljux772a8znj5x99tqs4829arfdmystha04egf8rvnqa2nfcp
-```
-
-## Use
-
-Add a new password.
+Set a password.
 
 ```
 $ neopass set example.com
 password: 
 ```
 
-Generate a new password.
+Generate a password.
 
 ```
 $ neopass gen example.com
@@ -101,7 +77,7 @@ copied to clipboard
 Retrieve a password.
 
 ```
-$ neopass get github.com
+$ neopass get example.com
 copied to clipboard
 ```
 
@@ -109,13 +85,8 @@ List existing passwords.
 
 ```
 $ neopass list
+example.com
 github.com
-digitalocean.com
-gitlab.com
-godaddy.com
-amazon.com
-auth0.com
-bitpay.com
 ```
 
 Remove a password.
@@ -123,6 +94,7 @@ Remove a password.
 ```
 $ neopass rm example.com
 ```
+# Stores
 
 List password stores.
 
@@ -132,7 +104,37 @@ $ neopass store
 -> neopass.cloud
 ```
 
-## Donate
+Show details about current store.
+
+```
+$ neopass store --details 
+
+Name
+neopass.cloud
+
+Location
+https://neopass.cloud?client_uuid=a909b6a8-f303-4cae-af31-9d1219f823e5
+
+Public Identity
+age1507ukgjv36hknkn2lhuwd9v2admp87yvkksx5cem7cfghh79r9dqjqcsar
+
+Recipients
+age1507ukgjv36hknkn2lhuwd9v2admp87yvkksx5cem7cfghh79r9dqjqcsar
+```
+
+Add recipient to current store.
+
+```
+$ neopass store --add-recipient age16yw5vdq0ymkjptuqq97ca00c9553t0m2xvslvvfl4xfw2c7egaaskya3aw
+```
+
+Switch password store.
+
+```
+# neopass store --switch default
+```
+
+# Donate
 
 Bitcoin (BTC)
 
