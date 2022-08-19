@@ -46,8 +46,6 @@ alias fzp='neopass get $(neopass list | fzf)'
 
 ## Initilize 
 
-![](images/init.gif)
-
 Initialize the default store protected with a master password.
 
 ```
@@ -85,8 +83,6 @@ stores:
 ```
 
 ## Use
-
-![](images/use.gif)
 
 Add a new password.
 
@@ -134,4 +130,18 @@ List password stores.
 $ neopass store
    default
 -> neopass.cloud
+```
+
+## Donate
+
+Bitcoin (BTC)
+
+```
+bc1qkm8gm3ggu8s4lnnc8mp0fahksp23u965hp758c
+```
+
+Ravencoin (RVN)
+
+```
+RSm7jfUjynsVptGyEDaW5yShiXbKBPsHNm
 ```
