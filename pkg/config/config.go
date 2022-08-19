@@ -61,30 +61,35 @@ type AgeConfig struct {
 	Recipients []string   `yaml:"recipients"`
 }
 
-func (c AgeConfig) unlockIdentityWithPassword(password string) (age.Identity, error) {
+func (c AgeConfig) unlockIdentityWithPassword(password string) (age.Identity, string, error) {
 	protector, err := age.NewScryptIdentity(password)
 	if err != nil {
-		return nil, fmt.Errorf("could not get protector identity: %v", err)
+		return nil, "", fmt.Errorf("could not get protector identity: %v", err)
 	}
 
 	decoder := ascii85.NewDecoder(strings.NewReader(c.Identity))
 	decrypter, err := age.Decrypt(decoder, protector)
 	if err != nil {
-		return nil, fmt.Errorf("could not decrypt identity: %v", err)
+		return nil, "", fmt.Errorf("could not decrypt identity: %v", err)
 	}
 
-	identities, err := age.ParseIdentities(decrypter)
+	bytes, err := ioutil.ReadAll(decrypter)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse identity: %v", err)
+		return nil, "", err
 	}
 
-	return identities[0], nil
+	identity, err := age.ParseX25519Identity(string(bytes))
+	if err != nil {
+		return nil, "", fmt.Errorf("could not parse identity: %v", err)
+	}
+
+	return identity, identity.Recipient().String(), nil
 }
 
-func (c AgeConfig) unlockIdentityWithPIV(yk *piv.YubiKey) (age.Identity, error) {
+func (c AgeConfig) unlockIdentityWithPIV(yk *piv.YubiKey) (age.Identity, string, error) {
 	cert, err := yk.Attest(slots[c.PIV.Slot])
 	if err != nil {
-		return nil, fmt.Errorf("could not get certificate: %v", err)
+		return nil, "", fmt.Errorf("could not get certificate: %v", err)
 	}
 
 	serial, _ := yk.Serial()
@@ -96,38 +101,38 @@ func (c AgeConfig) unlockIdentityWithPIV(yk *piv.YubiKey) (age.Identity, error) 
 
 	priv, err := yk.PrivateKey(slots[c.PIV.Slot], cert.PublicKey, auth)
 	if err != nil {
-		return nil, fmt.Errorf("could not setup private key: %v", err)
+		return nil, "", fmt.Errorf("could not setup private key: %v", err)
 	}
 
 	decrypter, ok := priv.(crypto.Decrypter)
 	if !ok {
-		return nil, fmt.Errorf("priv does not impliment Decrypter")
+		return nil, "", fmt.Errorf("priv does not impliment Decrypter")
 	}
 
 	decoder := ascii85.NewDecoder(strings.NewReader(c.Identity))
 	decoded, err := ioutil.ReadAll(decoder)
 	if err != nil {
-		return nil, fmt.Errorf("could not decode identity")
+		return nil, "", fmt.Errorf("could not decode identity")
 	}
 
 	decrypted, err := decrypter.Decrypt(rand.Reader, decoded, nil)
 	if err != nil {
-		return nil, fmt.Errorf("could not decrypt key file: %v", err)
+		return nil, "", fmt.Errorf("could not decrypt key file: %v", err)
 	}
 
 	identity, err := age.ParseX25519Identity(string(decrypted))
 	if err != nil {
-		return nil, fmt.Errorf("could not parse identity: %v", err)
+		return nil, "", fmt.Errorf("could not parse identity: %v", err)
 	}
 
-	return identity, nil
+	return identity, identity.Recipient().String(), nil
 }
 
-func (c AgeConfig) UnlockIdentity() (age.Identity, error) {
+func (c AgeConfig) UnlockIdentity() (age.Identity, string, error) {
 	if c.PIV == nil {
 		password, err := cli.TTYPassword()
 		if err != nil {
-			return nil, fmt.Errorf("could not get password: %v", err)
+			return nil, "", fmt.Errorf("could not get password: %v", err)
 		}
 
 		return c.unlockIdentityWithPassword(password)
@@ -135,7 +140,7 @@ func (c AgeConfig) UnlockIdentity() (age.Identity, error) {
 
 	yk, err := yubikey()
 	if err != nil {
-		return nil, fmt.Errorf("could not get card: %v", err)
+		return nil, "", fmt.Errorf("could not get card: %v", err)
 	}
 
 	return c.unlockIdentityWithPIV(yk)

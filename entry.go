@@ -6,7 +6,7 @@ type Entry struct {
 }
 
 type EntryRepo interface {
-	AddEntry(Entry) error
+	SetEntry(Entry) error
 	RemoveEntryByName(string) error
 	GetEntryByName(string) (Entry, error)
 	ListEntryNames() ([]string, error)

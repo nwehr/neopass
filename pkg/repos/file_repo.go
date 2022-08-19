@@ -14,7 +14,7 @@ func NewFileRepo(path string) (neopass.EntryRepo, error) {
 	return FileRepo{Path: path}, nil
 }
 
-func (r FileRepo) AddEntry(entry neopass.Entry) error {
+func (r FileRepo) SetEntry(entry neopass.Entry) error {
 	store := neopass.Store{}
 	if err := store.ReadFile(r.Path); err != nil {
 		return fmt.Errorf("could not load store: %w", err)

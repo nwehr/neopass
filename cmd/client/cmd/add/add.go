@@ -62,7 +62,7 @@ func RunAdd(opts AddOptions) error {
 		Password: encrypted,
 	}
 
-	if err := opts.Repo.AddEntry(entry); err != nil {
+	if err := opts.Repo.SetEntry(entry); err != nil {
 		return fmt.Errorf("could not add entry: %v\n", err)
 	}
 	return nil

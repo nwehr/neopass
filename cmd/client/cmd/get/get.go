@@ -43,7 +43,7 @@ func RunGet(opts GetOptions) error {
 		return err
 	}
 
-	identity, err := store.Age.UnlockIdentity()
+	identity, _, err := store.Age.UnlockIdentity()
 	if err != nil {
 		return err
 	}

@@ -16,7 +16,7 @@ func NewHTTPRepo(baseURL string) (neopass.EntryRepo, error) {
 	return httpRepo{BaseURL: baseURL}, nil
 }
 
-func (r httpRepo) AddEntry(entry neopass.Entry) error {
+func (r httpRepo) SetEntry(entry neopass.Entry) error {
 	encoded, err := json.Marshal(entry)
 	if err != nil {
 		return err

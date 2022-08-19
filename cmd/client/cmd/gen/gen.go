@@ -53,7 +53,7 @@ func RunGen(opts GenOptions) error {
 		Password: encrypted,
 	}
 
-	if err := r.AddEntry(entry); err != nil {
+	if err := r.SetEntry(entry); err != nil {
 		return fmt.Errorf("could not add entry: %v\n", err)
 	}
 

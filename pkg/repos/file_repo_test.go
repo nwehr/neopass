@@ -10,10 +10,10 @@ func TestAddEntry(t *testing.T) {
 	r := FileRepo{Path: "../store.yaml"}
 
 	{
-		if err := r.AddEntry(neopass.Entry{Name: "example.com", Password: "abc123"}); err != nil {
+		if err := r.SetEntry(neopass.Entry{Name: "example.com", Password: "abc123"}); err != nil {
 			t.Error(err)
 		}
-		if err := r.AddEntry(neopass.Entry{Name: "example.net", Password: "123abc"}); err != nil {
+		if err := r.SetEntry(neopass.Entry{Name: "example.net", Password: "123abc"}); err != nil {
 			t.Error(err)
 		}
 	}

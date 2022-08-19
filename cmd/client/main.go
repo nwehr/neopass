@@ -10,6 +10,7 @@ import (
 	"github.com/nwehr/neopass/cmd/client/cmd/initstore"
 	"github.com/nwehr/neopass/cmd/client/cmd/ls"
 	"github.com/nwehr/neopass/cmd/client/cmd/rm"
+	"github.com/nwehr/neopass/cmd/client/cmd/store"
 	"github.com/nwehr/neopass/pkg/config"
 )
 
@@ -91,36 +92,16 @@ func main() {
 		}
 
 	case "store":
-		opts, err := config.GetConfigOptions(os.Args)
+		opts, err := store.GetStoreOptions(os.Args)
 		if err != nil {
-			Fatalf("could not load config: %v\n", err)
+			Fatalf("%v\n", err)
 		}
 
-		if len(os.Args) == 3 {
-			for _, store := range opts.Config.Stores {
-				if store.Name == os.Args[2] {
-					opts.Config.CurrentStore = os.Args[2]
-					err = opts.Config.WriteFile(config.DefaultConfigFile)
-					if err != nil {
-						Fatalf(err.Error())
-
-					}
-					return
-				}
-			}
-
-			Fatalf("could not find store '%s'\n", os.Args[2])
+		err = store.RunStore(opts)
+		if err != nil {
+			Fatalf("%v\n", err)
 		}
 
-		for _, store := range opts.Config.Stores {
-			marker := "  "
-
-			if store.Name == opts.Config.CurrentStore {
-				marker = "->"
-			}
-
-			fmt.Printf("%s %s\n", marker, store.Name)
-		}
 	default:
 		showUsage()
 	}
@@ -130,35 +111,39 @@ func showUsage() {
 	fmt.Printf("neopass %s\n\n", version)
 
 	fmt.Println("Usage")
-	fmt.Println("  neopass [<command> [<name>]]")
+	fmt.Println("  neopass [<command> [<options>]]")
 	fmt.Println()
 	fmt.Println("Commands")
-	fmt.Println("  list            List entry names")
-	fmt.Println("  set   <name>    Set entry identified by name")
-	fmt.Println("  get   <name>    Get entry identified by name")
-	fmt.Println("  gen   <name>    Generate entry identified by name")
-	fmt.Println("  rm    <name>    Remove entry identified by name")
-	fmt.Println("  init [--piv [<slot>]] [--neopass.cloud]  Initialize store")
-	fmt.Println("  store [--switch <store name>]            Switch to store identified by name or list stores")
+	fmt.Println("  list")
+	fmt.Println("  set  <name>")
+	fmt.Println("  get  <name>")
+	fmt.Println("  gen  <name>")
+	fmt.Println("  rm   <name>")
+	fmt.Println("  init <options>")
+	fmt.Println("  store [<options>]")
 	fmt.Println()
 	fmt.Println("Options")
-	fmt.Println("  --config <path>   Config path (default ~/.neopass/config.yaml)")
+	fmt.Println("  --config <path>   Use config at path (default ~/.neopass/config.yaml)")
+	fmt.Println()
+	fmt.Println("Init Options")
+	fmt.Println("  --piv [<slot>]    Use PIV card instead of master password")
+	fmt.Println("  --name <name>     Specify name for password store")
+	fmt.Println("  --neopass.cloud   Use neopass.cloud as password store")
+	fmt.Println()
+	fmt.Println("Store Options")
+	fmt.Println("  --switch <name>  Switch to store identified by name")
+	fmt.Println("  --details        Show details for current store")
 	fmt.Println()
 	fmt.Println("Examples")
-	fmt.Println("   Initialize new password store on neopass cloud")
+	fmt.Println("   Initialize new password store on neopass.cloud protected by yubikey")
 	fmt.Println("       neopass init --piv --neopass.cloud")
-	fmt.Println()
-	fmt.Println("   Set an entry for github.com")
-	fmt.Println("       neopass set github.com")
-	fmt.Println()
-	fmt.Println("   Get password for github.com")
-	fmt.Println("       neopass get github.com")
 	fmt.Println()
 	fmt.Println("   Switch to a password store named default")
 	fmt.Println("       neopass store --switch default")
 	fmt.Println()
 	fmt.Println("Donate")
-	fmt.Println("   Ravencoin (RVN): RSm7jfUjynsVptGyEDaW5yShiXbKBPsHNm")
+	fmt.Println("   Bitcoin   (BTC) bc1qkm8gm3ggu8s4lnnc8mp0fahksp23u965hp758c")
+	fmt.Println("   Ravencoin (RVN) RSm7jfUjynsVptGyEDaW5yShiXbKBPsHNm")
 
 }
 
