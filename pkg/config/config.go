@@ -234,6 +234,16 @@ func (c Config) GetCurrentStore() (StoreConfig, error) {
 	return StoreConfig{}, fmt.Errorf("not found")
 }
 
+func (c Config) GetCurrentStoreIndex() (int, error) {
+	for i, store := range c.Stores {
+		if store.Name == c.CurrentStore {
+			return i, nil
+		}
+	}
+
+	return 0, fmt.Errorf("not found")
+}
+
 func (c Config) GetCurrentRepo() (neopass.EntryRepo, error) {
 	storeConfig, _ := c.GetCurrentStore()
 

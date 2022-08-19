@@ -2,13 +2,16 @@ package store
 
 import (
 	"fmt"
+	"strings"
 
+	"filippo.io/age"
 	"github.com/nwehr/neopass/pkg/config"
 )
 
 type StoreOptions struct {
 	ShowDetails   bool
 	SwitchStore   string
+	AddRecipient  string
 	ConfigOptions config.ConfigOptions
 }
 
@@ -28,6 +31,8 @@ func GetStoreOptions(args []string) (StoreOptions, error) {
 			opts.ShowDetails = true
 		case "--switch":
 			opts.SwitchStore = args[i+1]
+		case "--add-recipient":
+			opts.AddRecipient = args[i+1]
 		}
 	}
 
@@ -82,6 +87,27 @@ func RunStore(opts StoreOptions) error {
 		}
 
 		return fmt.Errorf("could not find store '%s'", opts.SwitchStore)
+	}
+
+	if opts.AddRecipient != "" {
+		index, err := opts.ConfigOptions.Config.GetCurrentStoreIndex()
+		if err != nil {
+			return err
+		}
+
+		_, err = age.ParseRecipients(strings.NewReader(opts.AddRecipient))
+		if err != nil {
+			return err
+		}
+
+		opts.ConfigOptions.Config.Stores[index].Age.Recipients = append(opts.ConfigOptions.Config.Stores[index].Age.Recipients, opts.AddRecipient)
+
+		err = opts.ConfigOptions.Config.WriteFile(config.DefaultConfigFile)
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	for _, store := range opts.ConfigOptions.Config.Stores {
