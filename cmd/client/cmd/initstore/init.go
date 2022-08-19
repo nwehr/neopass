@@ -13,6 +13,7 @@ type InitOptions struct {
 	PIVSlot string
 
 	NeopassDotCloud bool
+	ClientUUID      string
 
 	Name string
 }
@@ -27,7 +28,8 @@ func GetInitOptions(args []string) (InitOptions, error) {
 			opts.PIVSlot = getArgValue(args, i)
 		case "--neopass.cloud":
 			opts.NeopassDotCloud = true
-
+		case "--client-uuid":
+			opts.ClientUUID = getArgValue(args, i)
 		case "--name":
 			opts.Name = args[i+1]
 		}
@@ -79,8 +81,17 @@ func RunInit(opts InitOptions) error {
 	}
 
 	if opts.NeopassDotCloud {
+		clientUUID := uuid.NewString()
+
+		if opts.ClientUUID != "" {
+			parsedClientUUID, err := uuid.Parse(opts.ClientUUID)
+			if err == nil {
+				clientUUID = parsedClientUUID.String()
+			}
+		}
+
 		storeConfig.Name = "neopass.cloud"
-		storeConfig.Location = "https://neopass.cloud?client_uuid=" + uuid.New().String()
+		storeConfig.Location = "https://neopass.cloud?client_uuid=" + clientUUID
 	}
 
 	c := config.Config{}

@@ -46,6 +46,7 @@ func RunStore(opts StoreOptions) error {
 			return err
 		}
 
+		fmt.Println()
 		fmt.Println("Name")
 		fmt.Println(store.Name)
 		fmt.Println()
