@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 func TTYPrompt(prompt, defaultValue string) (string, error) {
@@ -26,16 +26,9 @@ func TTYPrompt(prompt, defaultValue string) (string, error) {
 
 func TTYPassword() (string, error) {
 	fmt.Print("password: ")
-
-	tty, err := os.Open("/dev/tty")
-	if err != nil {
-		return "", err
-	}
-
-	defer tty.Close()
 	defer fmt.Println()
 
-	password, err := terminal.ReadPassword(int(tty.Fd()))
+	password, err := term.ReadPassword(int(os.Stdin.Fd()))
 
 	return string(password), err
 }
@@ -43,16 +36,9 @@ func TTYPassword() (string, error) {
 func TTYPin(name string) func() (string, error) {
 	return func() (string, error) {
 		fmt.Printf("%s PIN: ", name)
-
-		tty, err := os.Open("/dev/tty")
-		if err != nil {
-			return "", err
-		}
-
-		defer tty.Close()
 		defer fmt.Println()
 
-		pin, err := terminal.ReadPassword(int(tty.Fd()))
+		pin, err := term.ReadPassword(int(os.Stdin.Fd()))
 
 		return string(pin), err
 	}
